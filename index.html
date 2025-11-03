@@ -129,51 +129,52 @@
     </div>
   </main>
 
-  <script type="module">
-    import { 
-      initializeApp 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { 
-      getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, query, where 
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<script type="module">
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // === CONFIGURACIÓN FIREBASE ===
-    const firebaseConfig = {
-      apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
-      authDomain: "inventariopv-643f1.firebaseapp.com",
-      projectId: "inventariopv-643f1",
-      storageBucket: "inventariopv-643f1.firebasestorage.app",
-      messagingSenderId: "96242533231",
-      appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
-    };
+// === CONFIGURACIÓN FIREBASE ===
+const firebaseConfig = {
+  apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
+  authDomain: "inventariopv-643f1.firebaseapp.com",
+  projectId: "inventariopv-643f1",
+  storageBucket: "inventariopv-643f1.appspot.com",
+  messagingSenderId: "96242533231",
+  appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-    const pendientesDiv = document.getElementById("pendientes");
-    const distribuidasDiv = document.getElementById("distribuidas");
-    const btnActualizar = document.getElementById("btnActualizar");
+const pendientesDiv = document.getElementById("pendientes");
+const distribuidasDiv = document.getElementById("distribuidas");
+const btnActualizar = document.getElementById("btnActualizar");
 
-    const almacenesDestino = [
-      "Almacen_Dulces",
-      "Almacen_Liquidos",
-      "Almacen_Ruta_1",
-      "Almacen_Ruta_2",
-      "almacen_cigarro",
-      "almacen_zapata",
-      "almacenabarrotepdd",
-      "MERMA"
-    ];
-    // Limpia la descripción para que pueda usarse como ID válido
-  function normalizarId(texto) {
+const almacenesDestino = [
+  "Almacen_Dulces",
+  "Almacen_Liquidos",
+  "Almacen_Ruta_1",
+  "Almacen_Ruta_2",
+  "almacen_cigarro",
+  "almacen_zapata",
+  "almacenabarrotepdd",
+  "MERMA"
+];
+
+// Limpia la descripción para que pueda usarse como ID válido
+function normalizarId(texto) {
   return texto
     .toLowerCase()
-    .replace(/[.#$/[\]\/]/g, "_") // elimina caracteres prohibidos
-    .replace(/\s+/g, "_")         // reemplaza espacios por "_"
-    .substring(0, 180);           // evita IDs demasiado largos
+    .replace(/[.#$/[\]\/]/g, "_")
+    .replace(/\s+/g, "_")
+    .substring(0, 180);
 }
 
-    // === FUNCIONES PARA VÍNCULOS ===
+// === FUNCIONES PARA VÍNCULOS ===
 async function obtenerVinculo(descripcion) {
   const idSeguro = normalizarId(descripcion);
   const ref = doc(db, "vinculos_factura_productos", idSeguro);
@@ -192,120 +193,162 @@ async function guardarVinculo(descripcion, productoId, conceptoProd) {
   });
 }
 
+// === CARGA PRINCIPAL ===
+async function cargarFacturas() {
+  pendientesDiv.innerHTML = "Cargando...";
+  distribuidasDiv.innerHTML = "";
 
-    // === CARGA PRINCIPAL ===
-    async function cargarFacturas() {
-      pendientesDiv.innerHTML = "Cargando...";
-      distribuidasDiv.innerHTML = "";
+  const filtroProv = document.getElementById("filtroProveedor").value.toLowerCase();
+  const filtroFecha = document.getElementById("filtroFecha").value;
 
-      const filtroProv = document.getElementById("filtroProveedor").value.toLowerCase();
-      const filtroFecha = document.getElementById("filtroFecha").value;
+  const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
+  const snap = await getDocs(ref);
+  pendientesDiv.innerHTML = "";
+  distribuidasDiv.innerHTML = "";
 
-      const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
-      const snap = await getDocs(ref);
-      pendientesDiv.innerHTML = "";
-      distribuidasDiv.innerHTML = "";
+  for (const docSnap of snap.docs) {
+    const data = docSnap.data();
+    const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
+    const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
+    if (!coincideProv || !coincideFecha) continue;
 
-      for (const docSnap of snap.docs) {
-        const data = docSnap.data();
-        const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
-        const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
-        if (!coincideProv || !coincideFecha) continue;
+    const card = document.createElement("div");
+    card.className = "tarjeta";
+    card.innerHTML = `
+      <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
+      <div class="detalle">
+        <b>Fecha:</b> ${data.fecha || "N/A"}<br>
+        <b>Total:</b> $${data.total?.toFixed(2) || "0.00"}<br>
+        <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
+      </div>
+      <div class="conceptos">Cargando conceptos...</div>
+      <div class="selector" style="display:none;">
+        <select>
+          <option value="">Seleccionar destino...</option>
+          ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
+        </select>
+        <button>Enviar</button>
+      </div>
+    `;
 
-        // === CREAR TARJETA ===
-        const card = document.createElement("div");
-        card.className = "tarjeta";
-        card.innerHTML = `
-          <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
-          <div class="detalle">
-            <b>Fecha:</b> ${data.fecha || "N/A"}<br>
-            <b>Total:</b> $${data.total?.toFixed(2) || "0.00"}<br>
-            <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
-          </div>
-          <div class="conceptos">Cargando conceptos...</div>
-          <div class="selector" style="display:none;">
-            <select>
-              <option value="">Seleccionar destino...</option>
-              ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
-            </select>
-            <button>Enviar</button>
-          </div>
-        `;
+    // === ABRIR TARJETA ===
+    card.addEventListener("click", async () => {
+      const conceptosDiv = card.querySelector(".conceptos");
+      const selectorDiv = card.querySelector(".selector");
+      conceptosDiv.classList.toggle("mostrar");
+      selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
 
-        // === AL ABRIR TARJETA ===
-        card.addEventListener("click", async () => {
-          const conceptosDiv = card.querySelector(".conceptos");
-          const selectorDiv = card.querySelector(".selector");
-          conceptosDiv.classList.toggle("mostrar");
-          selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
+      if (conceptosDiv.innerHTML === "Cargando conceptos...") {
+        const conceptos = data.conceptos_detalle || [];
+        let html = "";
+        for (const c of conceptos) {
+          const vinculo = await obtenerVinculo(c.descripcion);
+          if (vinculo) {
+            html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b></div>`;
+          } else {
+            html += `<div>${c.cantidad} × ${c.descripcion}
+              <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
+            </div>`;
+          }
+        }
+        conceptosDiv.innerHTML = html;
 
-          if (conceptosDiv.innerHTML === "Cargando conceptos...") {
-            const conceptos = data.conceptos_detalle || [];
-            let html = "";
-            for (const c of conceptos) {
-              const vinculo = await obtenerVinculo(c.descripcion);
-              if (vinculo) {
-                html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b></div>`;
-              } else {
-                html += `<div>${c.cantidad} × ${c.descripcion}
-                  <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
-                </div>`;
+        // === Buscador con sugerencias por concepto ===
+        conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
+          btn.addEventListener("click", async e => {
+            e.stopPropagation();
+            const descripcion = e.target.dataset.descripcion;
+
+            const modal = document.createElement("div");
+            modal.style = `
+              position:fixed;inset:0;background:rgba(0,0,0,0.5);
+              display:flex;align-items:center;justify-content:center;z-index:2000;
+            `;
+            modal.innerHTML = `
+              <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
+                <h3 style="margin-top:0;color:#00416A;">Buscar producto</h3>
+                <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
+                       style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
+                <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
+                     border:1px solid #ddd;border-radius:6px;"></div>
+                <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
+                        padding:6px 10px;border-radius:6px;">Cerrar</button>
+              </div>
+            `;
+            document.body.appendChild(modal);
+            const inputBusqueda = modal.querySelector("#inputBusquedaProd");
+            const listaResultados = modal.querySelector("#resultadosProd");
+            modal.querySelector("#cerrarModal").onclick = () => modal.remove();
+
+            inputBusqueda.addEventListener("input", async () => {
+              const valor = inputBusqueda.value.trim().toLowerCase();
+              listaResultados.innerHTML = "";
+              if (!valor) return;
+
+              const refProd = collection(db, "productos");
+              const snapProd = await getDocs(refProd);
+              const productos = snapProd.docs.map(d => ({ id: d.id, ...d.data() }));
+              const filtrados = productos.filter(p =>
+                (p.concepto || "").toLowerCase().includes(valor)
+              );
+
+              if (!filtrados.length) {
+                listaResultados.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
+                return;
               }
-            }
-            conceptosDiv.innerHTML = html;
 
-            // Eventos de vinculación manual
-            conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
-              btn.addEventListener("click", async e => {
-                e.stopPropagation();
-                const descripcion = e.target.dataset.descripcion;
-                const nombre = prompt("Escribe el nombre exacto del producto del catálogo:");
-                if (!nombre) return;
+              listaResultados.innerHTML = filtrados
+                .slice(0, 20)
+                .map(p => `
+                  <div data-id="${p.id}" data-nombre="${p.concepto}"
+                       style="padding:6px 8px;cursor:pointer;border-bottom:1px solid #eee;">
+                    ${p.concepto}
+                  </div>
+                `)
+                .join("");
 
-                const refProd = collection(db, "productos");
-                const q = query(refProd, where("concepto", "==", nombre));
-                const snapProd = await getDocs(q);
-
-                if (snapProd.empty) {
-                  alert("No se encontró ese producto en el catálogo.");
-                  return;
-                }
-
-                const prod = snapProd.docs[0];
-                await guardarVinculo(descripcion, prod.id, prod.data().concepto);
-                alert("Vinculación guardada.");
-                cargarFacturas();
+              listaResultados.querySelectorAll("div[data-id]").forEach(div => {
+                div.onclick = async () => {
+                  const productoId = div.dataset.id;
+                  const nombreProd = div.dataset.nombre;
+                  await guardarVinculo(descripcion, productoId, nombreProd);
+                  alert("✅ Vinculado con " + nombreProd);
+                  modal.remove();
+                  cargarFacturas();
+                };
               });
             });
-          }
-        });
-
-        // === ENVÍO DE FACTURA ===
-        const boton = card.querySelector("button");
-        boton.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          const select = card.querySelector("select");
-          const destino = select.value;
-          if (!destino) return alert("Selecciona un destino.");
-
-          const refDestino = doc(db, `almacenes/${destino}/entradas/${docSnap.id}`);
-          await setDoc(refDestino, { ...data, origen: "ALMACENCENTRALPDD", fechaDistribucion: new Date().toISOString() });
-          await updateDoc(doc(db, `almacenes/ALMACENCENTRALPDD/entradas/${docSnap.id}`), {
-            destino,
-            distribuido: true,
-            fechaDistribucion: new Date().toISOString()
           });
-          alert("Factura enviada correctamente a " + destino);
-          cargarFacturas();
         });
-
-        if (data.distribuido) distribuidasDiv.appendChild(card);
-        else pendientesDiv.appendChild(card);
       }
-    }
+    });
 
-    btnActualizar.addEventListener("click", cargarFacturas);
-    cargarFacturas();
-  </script>
+    // === ENVÍO DE FACTURA ===
+    const boton = card.querySelector("button");
+    boton.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const select = card.querySelector("select");
+      const destino = select.value;
+      if (!destino) return alert("Selecciona un destino.");
+
+      const refDestino = doc(db, `almacenes/${destino}/entradas/${docSnap.id}`);
+      await setDoc(refDestino, { ...data, origen: "ALMACENCENTRALPDD", fechaDistribucion: new Date().toISOString() });
+      await updateDoc(doc(db, `almacenes/ALMACENCENTRALPDD/entradas/${docSnap.id}`), {
+        destino,
+        distribuido: true,
+        fechaDistribucion: new Date().toISOString()
+      });
+      alert("Factura enviada correctamente a " + destino);
+      cargarFacturas();
+    });
+
+    if (data.distribuido) distribuidasDiv.appendChild(card);
+    else pendientesDiv.appendChild(card);
+  }
+}
+
+btnActualizar.addEventListener("click", cargarFacturas);
+cargarFacturas();
+</script>
 </body>
 </html>
