@@ -253,24 +253,24 @@ async function cargarFacturas() {
         }
         conceptosDiv.innerHTML = html;
 
-// === Buscador con sugerencias por concepto (solo productos activos) ===
-let productosActivosCache = null;
+// === Buscador con sugerencias por concepto (solo productos activos y cacheados) ===
+let productosActivosCache = null; // cache global para no recargar cada vez
 
 conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
   btn.addEventListener("click", async e => {
     e.stopPropagation();
     const descripcion = e.target.dataset.descripcion;
 
-    // Carga inicial única de productos activos
+    // Solo carga una vez todos los productos activos
     if (!productosActivosCache) {
       const refProd = collection(db, "productos");
       const snapProd = await getDocs(refProd);
       productosActivosCache = snapProd.docs
         .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => p.activo === true);
+        .filter(p => p.activo === true); // solo productos activos
     }
 
-    // Crear modal
+    // Modal visual
     const modal = document.createElement("div");
     modal.style = `
       position:fixed;inset:0;background:rgba(0,0,0,0.5);
@@ -288,12 +288,11 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
       </div>
     `;
     document.body.appendChild(modal);
-
     const inputBusqueda = modal.querySelector("#inputBusquedaProd");
     const listaResultados = modal.querySelector("#resultadosProd");
     modal.querySelector("#cerrarModal").onclick = () => modal.remove();
 
-    // Filtra en cache local, sin consultar Firestore en cada letra
+    // Filtrado rápido local
     inputBusqueda.addEventListener("input", () => {
       const valor = inputBusqueda.value.trim().toLowerCase();
       listaResultados.innerHTML = "";
@@ -331,6 +330,7 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
     });
   });
 });
+
     // === ENVÍO DE FACTURA ===
     const boton = card.querySelector("button");
     boton.addEventListener("click", async (e) => {
