@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Clasificación de Facturas PDD – PROVSOFT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --azul: #00416A;
+      --resalte: #0c6cbd;
+      --card: #ffffff;
+      --shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(to right, var(--azul), #E4E5E6);
+      color: #111;
+      min-height: 100vh;
+    }
+    header {
+      background: rgba(255,255,255,0.9);
+      box-shadow: var(--shadow);
+      padding: 14px 20px;
+      display: flex; flex-wrap: wrap;
+      justify-content: space-between; align-items: center;
+      position: sticky; top: 0;
+      z-index: 10;
+    }
+    header h1 {
+      margin: 0;
+      color: var(--azul);
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .filtros {
+      display: flex; gap: 10px; align-items: center;
+    }
+    input, select, button {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-family: inherit;
+    }
+    button {
+      background: var(--resalte);
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #005fa3; }
+
+    main {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      flex-wrap: wrap;
+    }
+    .columna {
+      flex: 1 1 45%;
+      background: rgba(255,255,255,0.9);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 10px;
+      min-height: 80vh;
+      overflow-y: auto;
+    }
+    h2 {
+      text-align: center;
+      color: var(--azul);
+      margin-top: 0;
+    }
+    .tarjeta {
+      background: var(--card);
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      padding: 12px;
+      margin-bottom: 12px;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .tarjeta:hover { transform: scale(1.01); }
+    .tarjeta h3 {
+      margin: 0;
+      color: var(--azul);
+      font-size: 16px;
+    }
+    .detalle {
+      margin-top: 6px;
+      font-size: 13px;
+    }
+    .conceptos {
+      font-size: 12px;
+      margin-top: 8px;
+      background: #f8f8f8;
+      border-radius: 8px;
+      padding: 6px;
+      display: none;
+    }
+    .mostrar { display: block !important; }
+    .selector {
+      margin-top: 8px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .selector select {
+      flex: 1;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Clasificación de Facturas PDD – PROVSOFT</h1>
+    <div class="filtros">
+      <input type="text" id="filtroProveedor" placeholder="Filtrar por proveedor...">
+      <input type="date" id="filtroFecha">
+      <button id="btnActualizar">Actualizar</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="columna">
+      <h2>Pendientes de distribuir</h2>
+      <div id="pendientes"></div>
+    </div>
+    <div class="columna">
+      <h2>Ya distribuidas</h2>
+      <div id="distribuidas"></div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { 
+      initializeApp 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { 
+      getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, query, where 
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // === CONFIGURACIÓN FIREBASE ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
+      authDomain: "inventariopv-643f1.firebaseapp.com",
+      projectId: "inventariopv-643f1",
+      storageBucket: "inventariopv-643f1.firebasestorage.app",
+      messagingSenderId: "96242533231",
+      appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const pendientesDiv = document.getElementById("pendientes");
+    const distribuidasDiv = document.getElementById("distribuidas");
+    const btnActualizar = document.getElementById("btnActualizar");
+
+    const almacenesDestino = [
+      "Almacen_Dulces",
+      "Almacen_Liquidos",
+      "Almacen_Ruta_1",
+      "Almacen_Ruta_2",
+      "almacen_cigarro",
+      "almacen_zapata",
+      "almacenabarrotepdd",
+      "MERMA"
+    ];
+    // Limpia la descripción para que pueda usarse como ID válido
+  function normalizarId(texto) {
+  return texto
+    .toLowerCase()
+    .replace(/[.#$/[\]\/]/g, "_") // elimina caracteres prohibidos
+    .replace(/\s+/g, "_")         // reemplaza espacios por "_"
+    .substring(0, 180);           // evita IDs demasiado largos
+}
+
+    // === FUNCIONES PARA VÍNCULOS ===
+async function obtenerVinculo(descripcion) {
+  const idSeguro = normalizarId(descripcion);
+  const ref = doc(db, "vinculos_factura_productos", idSeguro);
+  const snap = await getDoc(ref);
+  return snap.exists() ? snap.data() : null;
+}
+
+async function guardarVinculo(descripcion, productoId, conceptoProd) {
+  const idSeguro = normalizarId(descripcion);
+  const ref = doc(db, "vinculos_factura_productos", idSeguro);
+  await setDoc(ref, {
+    descripcionFactura: descripcion,
+    productoId,
+    concepto: conceptoProd,
+    fechaVinculo: new Date().toISOString()
+  });
+}
+
+
+    // === CARGA PRINCIPAL ===
+    async function cargarFacturas() {
+      pendientesDiv.innerHTML = "Cargando...";
+      distribuidasDiv.innerHTML = "";
+
+      const filtroProv = document.getElementById("filtroProveedor").value.toLowerCase();
+      const filtroFecha = document.getElementById("filtroFecha").value;
+
+      const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
+      const snap = await getDocs(ref);
+      pendientesDiv.innerHTML = "";
+      distribuidasDiv.innerHTML = "";
+
+      for (const docSnap of snap.docs) {
+        const data = docSnap.data();
+        const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
+        const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
+        if (!coincideProv || !coincideFecha) continue;
+
+        // === CREAR TARJETA ===
+        const card = document.createElement("div");
+        card.className = "tarjeta";
+        card.innerHTML = `
+          <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
+          <div class="detalle">
+            <b>Fecha:</b> ${data.fecha || "N/A"}<br>
+            <b>Total:</b> $${data.total?.toFixed(2) || "0.00"}<br>
+            <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
+          </div>
+          <div class="conceptos">Cargando conceptos...</div>
+          <div class="selector" style="display:none;">
+            <select>
+              <option value="">Seleccionar destino...</option>
+              ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
+            </select>
+            <button>Enviar</button>
+          </div>
+        `;
+
+        // === AL ABRIR TARJETA ===
+        card.addEventListener("click", async () => {
+          const conceptosDiv = card.querySelector(".conceptos");
+          const selectorDiv = card.querySelector(".selector");
+          conceptosDiv.classList.toggle("mostrar");
+          selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
+
+          if (conceptosDiv.innerHTML === "Cargando conceptos...") {
+            const conceptos = data.conceptos_detalle || [];
+            let html = "";
+            for (const c of conceptos) {
+              const vinculo = await obtenerVinculo(c.descripcion);
+              if (vinculo) {
+                html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b></div>`;
+              } else {
+                html += `<div>${c.cantidad} × ${c.descripcion}
+                  <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
+                </div>`;
+              }
+            }
+            conceptosDiv.innerHTML = html;
+
+            // Eventos de vinculación manual
+            conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
+              btn.addEventListener("click", async e => {
+                e.stopPropagation();
+                const descripcion = e.target.dataset.descripcion;
+                const nombre = prompt("Escribe el nombre exacto del producto del catálogo:");
+                if (!nombre) return;
+
+                const refProd = collection(db, "productos");
+                const q = query(refProd, where("concepto", "==", nombre));
+                const snapProd = await getDocs(q);
+
+                if (snapProd.empty) {
+                  alert("No se encontró ese producto en el catálogo.");
+                  return;
+                }
+
+                const prod = snapProd.docs[0];
+                await guardarVinculo(descripcion, prod.id, prod.data().concepto);
+                alert("Vinculación guardada.");
+                cargarFacturas();
+              });
+            });
+          }
+        });
+
+        // === ENVÍO DE FACTURA ===
+        const boton = card.querySelector("button");
+        boton.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const select = card.querySelector("select");
+          const destino = select.value;
+          if (!destino) return alert("Selecciona un destino.");
+
+          const refDestino = doc(db, `almacenes/${destino}/entradas/${docSnap.id}`);
+          await setDoc(refDestino, { ...data, origen: "ALMACENCENTRALPDD", fechaDistribucion: new Date().toISOString() });
+          await updateDoc(doc(db, `almacenes/ALMACENCENTRALPDD/entradas/${docSnap.id}`), {
+            destino,
+            distribuido: true,
+            fechaDistribucion: new Date().toISOString()
+          });
+          alert("Factura enviada correctamente a " + destino);
+          cargarFacturas();
+        });
+
+        if (data.distribuido) distribuidasDiv.appendChild(card);
+        else pendientesDiv.appendChild(card);
+      }
+    }
+
+    btnActualizar.addEventListener("click", cargarFacturas);
+    cargarFacturas();
+  </script>
+</body>
+</html>
