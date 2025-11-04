@@ -420,7 +420,12 @@ for (const c2 of conceptosActualizados) {
 }
 
 conceptosDiv.innerHTML = html;
-modal.remove();
+                modal.remove();
+              }); // ← cierra div.addEventListener("click", async ...)
+            }); // ← cierra listaResultados.querySelectorAll
+          }); // ← cierra inputBusqueda.addEventListener
+        }); // ← cierra btn.addEventListener
+      }); // ← cierra conceptosDiv.querySelectorAll(".btnVincular")
 
       // === Re-vincular ===
       conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
