@@ -238,26 +238,27 @@ async function cargarFacturas() {
       conceptosDiv.classList.toggle("mostrar");
       selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
 
-      if (conceptosDiv.innerHTML === "Cargando conceptos...") {
-        const conceptos = data.conceptos_detalle || [];
-        let html = "";
-        for (const c of conceptos) {
-          const vinculo = await obtenerVinculo(c.descripcion);
-          if (vinculo) {
-            html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b></div>`;
-          } else {
-            html += `<div>${c.cantidad} × ${c.descripcion}
-              <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
-            </div>`;
-          }
-        }
-        conceptosDiv.innerHTML = html;
+if (conceptosDiv.innerHTML === "Cargando conceptos...") {
+  const conceptos = data.conceptos_detalle || [];
+  let html = "";
+  for (const c of conceptos) {
+    const vinculo = await obtenerVinculo(c.descripcion);
+    if (vinculo) {
+      html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b></div>`;
+    } else {
+      html += `<div>${c.cantidad} × ${c.descripcion}
+        <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
+      </div>`;
+    }
+  }
+  conceptosDiv.innerHTML = html;
+}
 
 // === Buscador con sugerencias por concepto (solo productos activos y cacheados) ===
-let productosActivosCache = null; // cache global para no recargar cada vez
+let productosActivosCache = null;
 
 conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
-  btn.addEventListener("click", async e => {
+  btn.addEventListener("click", async (e) => {
     e.stopPropagation();
     const descripcion = e.target.dataset.descripcion;
 
@@ -267,10 +268,10 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
       const snapProd = await getDocs(refProd);
       productosActivosCache = snapProd.docs
         .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => p.activo === true); // solo productos activos
+        .filter(p => p.activo === true);
     }
 
-    // Modal visual
+    // Crear modal de búsqueda
     const modal = document.createElement("div");
     modal.style = `
       position:fixed;inset:0;background:rgba(0,0,0,0.5);
@@ -288,11 +289,12 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
       </div>
     `;
     document.body.appendChild(modal);
+
     const inputBusqueda = modal.querySelector("#inputBusquedaProd");
     const listaResultados = modal.querySelector("#resultadosProd");
     modal.querySelector("#cerrarModal").onclick = () => modal.remove();
 
-    // Filtrado rápido local
+    // Filtro local rápido
     inputBusqueda.addEventListener("input", () => {
       const valor = inputBusqueda.value.trim().toLowerCase();
       listaResultados.innerHTML = "";
@@ -318,14 +320,14 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
         .join("");
 
       listaResultados.querySelectorAll("div[data-id]").forEach(div => {
-        div.onclick = async () => {
+        div.addEventListener("click", async () => {
           const productoId = div.dataset.id;
           const nombreProd = div.dataset.nombre;
           await guardarVinculo(descripcion, productoId, nombreProd);
           alert("✅ Vinculado con " + nombreProd);
           modal.remove();
           cargarFacturas();
-        };
+        });
       });
     });
   });
