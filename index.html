@@ -238,6 +238,7 @@ if (snap.empty) {
 
   for (const docSnap of snap.docs) {
     const data = docSnap.data();
+    console.log("Documento:", docSnap.id, data);
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
 // if (!coincideProv || !coincideFecha) continue;
