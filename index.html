@@ -226,7 +226,6 @@ async function cargarFacturas() {
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
-  console.log("Docs encontrados:", snap.size);
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
@@ -598,48 +597,33 @@ boton.addEventListener("click", async (e) => {
     return;
   }
 
-  // 🔹 Enlazar códigos internos a los conceptos antes de enviar
-  const conceptos = data.conceptos_detalle || [];
-  const conceptosEnlazados = [];
-  for (const c of conceptos) {
-    const vinculo = await obtenerVinculo(c.descripcion);
-    if (vinculo) {
-      conceptosEnlazados.push({
-        ...c,
-        productoId: vinculo.productoId,
-        productoInterno: vinculo.concepto,
-        conversion: vinculo.conversion,
-        cantidadTotal: vinculo.cantidadTotal,
-      });
-    } else {
-      conceptosEnlazados.push(c);
-    }
-  }
-
-  // 🔹 Guardar en destino con los enlaces
   const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
   await setDoc(refDestino, {
     ...data,
-    conceptos_detalle: conceptosEnlazados,
     origen: "ALMACENCENTRALPDD",
     fechaDistribucion: new Date().toISOString()
   });
 
-  // 🔹 Actualizar el documento original
   const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
   await updateDoc(refCentral, {
-    destino,
+    destino: destino,
     distribuido: true,
     fechaDistribucion: new Date().toISOString()
   });
 
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
-}); // ← cierra boton.addEventListener
-  } // ← agrega esta llave para cerrar el for (const docSnap of snap.docs)
-}   // ← cierra async function cargarFacturas
-  
-// Ejecutar al inicio y al presionar actualizar
+});
+
+    // === Clasificación visual ===
+    if (data.distribuido) {
+      distribuidasDiv.appendChild(card);
+    } else {
+      pendientesDiv.appendChild(card);
+    }
+  } // 🔹 CIERRA el for-loop
+} // 🔹 CIERRA la función cargarFacturas()
+
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
 </script>
