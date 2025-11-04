@@ -163,7 +163,8 @@ const almacenesDestino = [
   "almacen_zapata",
   "almacenabarrotepdd",
   "Almacen_B41",
-  "Almacen_Matriz"
+  "Almacen_Matriz",
+  "Gasto" // ← nueva opción al final
 ];
 
 // Limpia la descripción para que pueda usarse como ID válido
@@ -234,6 +235,8 @@ async function cargarFacturas() {
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
     if (!coincideProv || !coincideFecha) continue;
+    if (data.clasificacion === "Gasto") continue;
+
 
     const card = document.createElement("div");
     card.className = "tarjeta";
@@ -587,7 +590,7 @@ select.addEventListener("click", (e) => e.stopPropagation()); // ✅ Evita colap
 
 const boton = card.querySelector("button");
 boton.addEventListener("click", async (e) => {
-  e.stopPropagation(); // ✅ Evita cerrar tarjeta
+  e.stopPropagation();
 
   const destino = select.value;
   if (!destino) {
@@ -595,7 +598,20 @@ boton.addEventListener("click", async (e) => {
     return;
   }
 
-  // 🔹 Enlazar códigos internos a los conceptos antes de enviar
+  // 🔹 Si es gasto, solo marcar la factura como clasificada como gasto
+  if (destino === "Gasto") {
+    const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
+    await updateDoc(refCentral, {
+      clasificacion: "Gasto",
+      distribuido: true,
+      fechaClasificacion: new Date().toISOString()
+    });
+    alert("✅ Factura clasificada como GASTO ADMINISTRATIVO/OPERATIVO.");
+    cargarFacturas(); // la saca de pendientes
+    return;
+  }
+
+  // 🔹 Si no es gasto, sigue flujo normal
   const conceptos = data.conceptos_detalle || [];
   const conceptosEnlazados = [];
 
@@ -610,11 +626,10 @@ boton.addEventListener("click", async (e) => {
         cantidadTotal: vinculo.cantidadTotal
       });
     } else {
-      conceptosEnlazados.push(c); // sin vínculo
+      conceptosEnlazados.push(c);
     }
   }
 
-  // 🔹 Guardar en el nuevo almacén con los conceptos ya enlazados
   const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
   await setDoc(refDestino, {
     ...data,
@@ -623,7 +638,6 @@ boton.addEventListener("click", async (e) => {
     fechaDistribucion: new Date().toISOString()
   });
 
-  // 🔹 Actualizar el documento original en central
   const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
   await updateDoc(refCentral, {
     destino: destino,
@@ -633,21 +647,7 @@ boton.addEventListener("click", async (e) => {
 
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
-}); // ← cierra boton.addEventListener
-
-// Clasificación visual: pendiente o distribuida
-if (data.distribuido) {
-  distribuidasDiv.appendChild(card);
-} else {
-  pendientesDiv.appendChild(card);
-}
-
-} // ← cierra el for (const docSnap of snap.docs)
-} // ← cierra la función cargarFacturas()
-
-// Ejecutar al inicio y al presionar actualizar
-btnActualizar.addEventListener("click", cargarFacturas);
-cargarFacturas();
+});
 </script>
 </body>
 </html>
