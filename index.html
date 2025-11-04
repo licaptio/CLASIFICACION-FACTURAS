@@ -274,7 +274,7 @@ async function cargarFacturas() {
             </div>`;
           } else {
             html += `<div>${c.cantidad} × ${c.descripcion}
-              <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
+             <button class="btnVincular" data-descripcion="${c.descripcion}" data-cantidad="${c.cantidad}">Vincular producto</button>
             </div>`;
           }
         }
@@ -385,7 +385,7 @@ async function cargarFacturas() {
                   };
                 });
 
-                const cantidadOriginal = parseFloat(c?.cantidad || 1);
+                const cantidadOriginal = parseFloat(btn.dataset.cantidad || 1);
                 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
                 await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
