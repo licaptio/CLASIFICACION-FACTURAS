@@ -387,7 +387,7 @@ if (!productosActivosCache) {
                   };
                 });
 
-              const cantidadOriginal = parseFloat(c.cantidad) || 1;
+              const cantidadOriginal = Number(c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
 
@@ -532,7 +532,7 @@ const filtrados = productosActivosCache.filter(p =>
                   };
                 });
 
-               const cantidadOriginal = parseFloat(c.cantidad) || 1;
+               const cantidadOriginal = Number(c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
 
