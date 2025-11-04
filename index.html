@@ -597,13 +597,35 @@ boton.addEventListener("click", async (e) => {
     return;
   }
 
+  // 🔹 Enlazar códigos internos a los conceptos antes de enviar
+  const conceptos = data.conceptos_detalle || [];
+  const conceptosEnlazados = [];
+
+  for (const c of conceptos) {
+    const vinculo = await obtenerVinculo(c.descripcion);
+    if (vinculo) {
+      conceptosEnlazados.push({
+        ...c,
+        productoId: vinculo.productoId,
+        productoInterno: vinculo.concepto,
+        conversion: vinculo.conversion,
+        cantidadTotal: vinculo.cantidadTotal
+      });
+    } else {
+      conceptosEnlazados.push(c); // sin vínculo
+    }
+  }
+
+  // 🔹 Guardar en el nuevo almacén con los conceptos ya enlazados
   const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
   await setDoc(refDestino, {
     ...data,
+    conceptos_detalle: conceptosEnlazados,
     origen: "ALMACENCENTRALPDD",
     fechaDistribucion: new Date().toISOString()
   });
 
+  // 🔹 Actualizar el documento original en central
   const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
   await updateDoc(refCentral, {
     destino: destino,
@@ -613,19 +635,6 @@ boton.addEventListener("click", async (e) => {
 
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
-});
-
-    // === Clasificación visual ===
-    if (data.distribuido) {
-      distribuidasDiv.appendChild(card);
-    } else {
-      pendientesDiv.appendChild(card);
-    }
-  } // 🔹 CIERRA el for-loop
-} // 🔹 CIERRA la función cargarFacturas()
-
-btnActualizar.addEventListener("click", cargarFacturas);
-cargarFacturas();
 </script>
 </body>
 </html>
