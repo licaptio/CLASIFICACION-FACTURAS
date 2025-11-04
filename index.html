@@ -215,21 +215,22 @@ async function cargarFacturas() {
     const card = document.createElement("div");
     card.className = "tarjeta";
     card.innerHTML = `
-      <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
-      <div class="detalle">
-        <b>Fecha:</b> ${data.fecha || "N/A"}<br>
-        <b>Total:</b> $${data.total?.toFixed(2) || "0.00"}<br>
-        <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
-      </div>
-      <div class="conceptos">Cargando conceptos...</div>
-      <div class="selector" style="display:none;">
-        <select>
-          <option value="">Seleccionar destino...</option>
-          ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
-        </select>
-        <button>Enviar</button>
-      </div>
-    `;
+  <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
+  <div class="detalle">
+    <b>Fecha:</b> ${data.fecha || "N/A"}<br>
+    <b>Total:</b> $${(data.total ? data.total.toFixed(2) : "0.00")}<br>
+    <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
+  </div>
+  <div class="conceptos">Cargando conceptos...</div>
+  <div class="selector" style="display:none;">
+    <select>
+      <option value="">Seleccionar destino...</option>
+      ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
+    </select>
+    <button>Enviar</button>
+  </div>
+`;
+
 
     // === ABRIR TARJETA ===
     card.addEventListener("click", async () => {
