@@ -240,8 +240,8 @@ if (snap.empty) {
     const data = docSnap.data();
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
-    if (!coincideProv || !coincideFecha) continue;
-    if (data.clasificacion === "Gasto") continue;
+// if (!coincideProv || !coincideFecha) continue;
+// if (data.clasificacion === "Gasto") continue;
 
 
     const card = document.createElement("div");
