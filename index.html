@@ -192,6 +192,16 @@ async function guardarVinculo(descripcion, productoId, conceptoProd) {
     fechaVinculo: new Date().toISOString()
   });
 }
+// === ELIMINAR VÍNCULO EXISTENTE ===
+import { deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+async function eliminarVinculo(descripcion) {
+  const idSeguro = normalizarId(descripcion);
+  const ref = doc(db, "vinculos_factura_productos", idSeguro);
+  await deleteDoc(ref);
+  alert("❌ Vínculo eliminado correctamente");
+  cargarFacturas(); // refresca automáticamente la vista
+}
 
 // === CARGA PRINCIPAL ===
 async function cargarFacturas() {
@@ -242,16 +252,20 @@ async function cargarFacturas() {
 if (conceptosDiv.innerHTML === "Cargando conceptos...") {
   const conceptos = data.conceptos_detalle || [];
   let html = "";
-  for (const c of conceptos) {
-    const vinculo = await obtenerVinculo(c.descripcion);
-    if (vinculo) {
-      html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b></div>`;
-    } else {
-      html += `<div>${c.cantidad} × ${c.descripcion}
-        <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
-      </div>`;
-    }
+for (const c of conceptos) {
+  const vinculo = await obtenerVinculo(c.descripcion);
+  if (vinculo) {
+    html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b>
+      <button class="btnReVincular" data-descripcion="${c.descripcion}">🔁 Cambiar</button>
+      <button class="btnEliminarVinculo" data-descripcion="${c.descripcion}">🗑</button>
+    </div>`;
+  } else {
+    html += `<div>${c.cantidad} × ${c.descripcion}
+      <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
+    </div>`;
   }
+}
+
   conceptosDiv.innerHTML = html;
 } // 🔹 Aquí se cierra correctamente el if antes del buscador
 
@@ -263,14 +277,40 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
     e.stopPropagation();
     const descripcion = e.target.dataset.descripcion;
 
-    // Solo carga una vez todos los productos activos
     if (!productosActivosCache) {
       const refProd = collection(db, "productos");
       const snapProd = await getDocs(refProd);
       productosActivosCache = snapProd.docs
         .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => p.activo === true); // solo productos activos
+        .filter(p => p.activo === true);
     }
+
+    // ... (aquí va todo el código del modal hasta cerrar)
+  });
+}); // ✅ CIERRA AQUÍ el bloque de btnVincular
+
+// 🔹 Y LUEGO PONES ESTOS DOS BLOQUES AQUÍ ABAJO:
+
+// Re-vincular
+conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
+  btn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const descripcion = e.target.dataset.descripcion;
+    const fakeButton = document.createElement("button");
+    fakeButton.dataset.descripcion = descripcion;
+    fakeButton.classList.add("btnVincular");
+    fakeButton.click();
+  });
+});
+
+// Eliminar vínculo
+conceptosDiv.querySelectorAll(".btnEliminarVinculo").forEach(btn => {
+  btn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const descripcion = e.target.dataset.descripcion;
+    await eliminarVinculo(descripcion);
+  });
+});
 
     // Modal visual
     const modal = document.createElement("div");
