@@ -647,7 +647,12 @@ boton.addEventListener("click", async (e) => {
 
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
-});
+}); // ← cierra boton.addEventListener
+} // ← cierra el for (const docSnap of snap.docs)
+  
+btnActualizar.addEventListener("click", cargarFacturas);
+cargarFacturas();
+} // ← cierra la función cargarFacturas()
 </script>
 </body>
 </html>
