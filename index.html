@@ -396,43 +396,31 @@ if (!confirmar) {
   return;
 }
 
-                await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
-                alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
-                modal.remove();
-                
-                // 🔹 Actualiza solo el concepto actual sin recargar todo
-                const conceptos = data.conceptos_detalle || [];
-                const item = Array.from(conceptosDiv.children).find(div =>
-                  div.textContent.includes(descripcion)
-                );
-                if (item) {
-                  const c = conceptos.find(concepto => concepto.descripcion === descripcion);
-                  if (c) {
-                    item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
-                      <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
-                      <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
+alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
 
-                    // 🔹 Reasigna eventos locales sin recargar todo
-                    item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
-                      e.stopPropagation();
-                      const fakeButton = document.createElement("button");
-                      fakeButton.dataset.descripcion = descripcion;
-                      fakeButton.classList.add("btnVincular");
-                      fakeButton.click();
-                    });
+// 🔹 Forzar recarga del listado actualizado
+conceptosDiv.innerHTML = "Actualizando...";
+const conceptosActualizados = data.conceptos_detalle || [];
+let html = "";
 
-                    item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
-                      e.stopPropagation();
-                      await eliminarVinculo(descripcion);
-                    });
-                  }
-                }
-              });
-            });
-          });
-        });
-      });
+for (const c2 of conceptosActualizados) {
+  const vinculoNuevo = await obtenerVinculo(c2.descripcion);
+  if (vinculoNuevo) {
+    html += `<div>✅ ${c2.cantidad} × ${c2.descripcion} — vinculado a <b>${vinculoNuevo.concepto}</b>
+      <button class="btnReVincular" data-descripcion="${c2.descripcion}">🔁 Cambiar</button>
+      <button class="btnEliminarVinculo" data-descripcion="${c2.descripcion}">🗑</button>
+    </div>`;
+  } else {
+    html += `<div>${c2.cantidad} × ${c2.descripcion}
+      <button class="btnVincular" data-descripcion="${c2.descripcion}">Vincular producto</button>
+    </div>`;
+  }
+}
+
+conceptosDiv.innerHTML = html;
+modal.remove();
 
       // === Re-vincular ===
       conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
