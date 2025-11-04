@@ -134,8 +134,7 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc,
-  query, where
+  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // === CONFIGURACIÓN FIREBASE ===
@@ -166,17 +165,6 @@ const almacenesDestino = [
   "Almacen_B41",
   "Almacen_Matriz"
 ];
-  // === CARGA GLOBAL DE PRODUCTOS ACTIVOS (UNA SOLA VEZ) ===
-let productosActivosCache = [];
-
-(async () => {
-  const refProd = collection(db, "productos");
-  const q = query(refProd, where("activo", "==", true));
-  const snapProd = await getDocs(q);
-  productosActivosCache = snapProd.docs.map(d => ({ id: d.id, ...d.data() }));
-  console.log("Productos activos cargados:", productosActivosCache.length);
-})();
-
 
 // Limpia la descripción para que pueda usarse como ID válido
 function normalizarId(texto) {
@@ -295,10 +283,20 @@ async function cargarFacturas() {
       }
 
       // === Vincular producto ===
+      let productosActivosCache = null;
+
       conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
         btn.addEventListener("click", async (e) => {
           e.stopPropagation();
           const descripcion = e.target.dataset.descripcion;
+
+          if (!productosActivosCache) {
+            const refProd = collection(db, "productos");
+            const snapProd = await getDocs(refProd);
+            productosActivosCache = snapProd.docs
+              .map(d => ({ id: d.id, ...d.data() }))
+              .filter(p => p.activo === true);
+          }
 
           // === MODAL ===
           const modal = document.createElement("div");
@@ -382,47 +380,54 @@ async function cargarFacturas() {
                   btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
                   conversionBox.appendChild(btnConfirm);
 
-btnConfirm.onclick = async () => {
-  const valor = parseInt(input.value) || 1;
-  btnConfirm.remove();
+                  btnConfirm.onclick = () => {
+                    const valor = parseInt(input.value) || 1;
+                    btnConfirm.remove();
+                    resolve(valor);
+                  };
+                });
 
-  const cantidadOriginal = parseFloat(c.cantidad) || 1;
-  const cantidadTotal = cantidadOriginal * valor;
+              const cantidadOriginal = parseFloat(c.cantidad) || 1;
+const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
-  await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, valor, cantidadTotal);
 
-  alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${valor} = ${cantidadTotal} piezas)`);
-  modal.remove();
+                await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
-  // 🔹 Actualiza visualmente el concepto
-  const conceptos = data.conceptos_detalle || [];
-  const item = Array.from(conceptosDiv.children).find(div =>
-    div.textContent.includes(descripcion)
-  );
-  if (item) {
-    const c = conceptos.find(concepto => concepto.descripcion === descripcion);
-    if (c) {
-      item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
-        <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
-        <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
+                alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
+                modal.remove();
+                
+                // 🔹 Actualiza solo el concepto actual sin recargar todo
+                const conceptos = data.conceptos_detalle || [];
+                const item = Array.from(conceptosDiv.children).find(div =>
+                  div.textContent.includes(descripcion)
+                );
+                if (item) {
+                  const c = conceptos.find(concepto => concepto.descripcion === descripcion);
+                  if (c) {
+                    item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
+                      <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
+                      <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
 
-      item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const fakeButton = document.createElement("button");
-        fakeButton.dataset.descripcion = descripcion;
-        fakeButton.classList.add("btnVincular");
-        fakeButton.click();
+                    // 🔹 Reasigna eventos locales sin recargar todo
+                    item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
+                      e.stopPropagation();
+                      const fakeButton = document.createElement("button");
+                      fakeButton.dataset.descripcion = descripcion;
+                      fakeButton.classList.add("btnVincular");
+                      fakeButton.click();
+                    });
+
+                    item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
+                      e.stopPropagation();
+                      await eliminarVinculo(descripcion);
+                    });
+                  }
+                }
+              });
+            });
+          });
+        });
       });
-
-      item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
-        e.stopPropagation();
-        await eliminarVinculo(descripcion);
-      });
-    }
-  }
-}; // ✅ cierra btnConfirm.onclick
-
-}); // ✅ aquí va el cierre correcto del div.addEventListener("click", async () => {
 
       // === Re-vincular ===
       conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
@@ -640,6 +645,10 @@ if (data.distribuido) {
 } else {
   pendientesDiv.appendChild(card);
 }
+
+} // ← cierra el for (const docSnap of snap.docs)
+} // ← cierra la función cargarFacturas()
+
 // Ejecutar al inicio y al presionar actualizar
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
