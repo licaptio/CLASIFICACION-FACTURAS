@@ -382,54 +382,45 @@ async function cargarFacturas() {
                   btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
                   conversionBox.appendChild(btnConfirm);
 
-                  btnConfirm.onclick = () => {
-                    const valor = parseInt(input.value) || 1;
-                    btnConfirm.remove();
-                    resolve(valor);
-                  };
-                });
+btnConfirm.onclick = async () => {
+  const valor = parseInt(input.value) || 1;
+  btnConfirm.remove();
 
-              const cantidadOriginal = parseFloat(c.cantidad) || 1;
-const cantidadTotal = cantidadOriginal * piezasPorCaja;
+  const cantidadOriginal = parseFloat(c.cantidad) || 1;
+  const cantidadTotal = cantidadOriginal * valor;
 
+  await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, valor, cantidadTotal);
 
-                await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+  alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${valor} = ${cantidadTotal} piezas)`);
+  modal.remove();
 
-                alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
-                modal.remove();
-                
-                // 🔹 Actualiza solo el concepto actual sin recargar todo
-                const conceptos = data.conceptos_detalle || [];
-                const item = Array.from(conceptosDiv.children).find(div =>
-                  div.textContent.includes(descripcion)
-                );
-                if (item) {
-                  const c = conceptos.find(concepto => concepto.descripcion === descripcion);
-                  if (c) {
-                    item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
-                      <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
-                      <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
+  // 🔹 Actualiza visualmente el concepto
+  const conceptos = data.conceptos_detalle || [];
+  const item = Array.from(conceptosDiv.children).find(div =>
+    div.textContent.includes(descripcion)
+  );
+  if (item) {
+    const c = conceptos.find(concepto => concepto.descripcion === descripcion);
+    if (c) {
+      item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
+        <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
+        <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
 
-                    // 🔹 Reasigna eventos locales sin recargar todo
-                    item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
-                      e.stopPropagation();
-                      const fakeButton = document.createElement("button");
-                      fakeButton.dataset.descripcion = descripcion;
-                      fakeButton.classList.add("btnVincular");
-                      fakeButton.click();
-                    });
-
-                    item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
-                      e.stopPropagation();
-                      await eliminarVinculo(descripcion);
-                    });
-                  }
-                }
-              });
-            });
-          });
-        });
+      item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const fakeButton = document.createElement("button");
+        fakeButton.dataset.descripcion = descripcion;
+        fakeButton.classList.add("btnVincular");
+        fakeButton.click();
       });
+
+      item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await eliminarVinculo(descripcion);
+      });
+    }
+  }
+};
 
       // === Re-vincular ===
       conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
