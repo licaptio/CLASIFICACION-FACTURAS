@@ -582,34 +582,34 @@ async function cargarFacturas() {
 
     }); // ✅ CIERRA card.addEventListener
 
-    // === ENVÍO DE FACTURA ===
-    const boton = card.querySelector("button");
-    boton.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      const select = card.querySelector("select");
-      const destino = select.value;
-      if (!destino) {
-        alert("Selecciona un destino.");
-        return;
-      }
+// === ENVÍO DE FACTURA ===
+const boton = card.querySelector("button");
+boton.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  const select = card.querySelector("select");
+  const destino = select.value;
+  if (!destino) {
+    alert("Selecciona un destino.");
+    return;
+  }
 
-      const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
-      await setDoc(refDestino, {
-        ...data,
-        origen: "ALMACENCENTRALPDD",
-        fechaDistribucion: new Date().toISOString()
-      });
+  const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
+  await setDoc(refDestino, {
+    ...data,
+    origen: "ALMACENCENTRALPDD",
+    fechaDistribucion: new Date().toISOString()
+  });
 
-      const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
-      await updateDoc(refCentral, {
-        destino: destino,
-        distribuido: true,
-        fechaDistribucion: new Date().toISOString()
-      });
+  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
+  await updateDoc(refCentral, {
+    destino: destino,
+    distribuido: true,
+    fechaDistribucion: new Date().toISOString()
+  });
 
-      alert("✅ Factura enviada correctamente a " + destino);
-      cargarFacturas();
-    });
+  alert("✅ Factura enviada correctamente a " + destino);
+  cargarFacturas();
+});
 
     // === Clasificación visual ===
     if (data.distribuido) {
