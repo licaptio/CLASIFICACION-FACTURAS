@@ -387,8 +387,11 @@ if (!productosActivosCache) {
                   };
                 });
 
-              const cantidadOriginal = Number(c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
+// Usa la cantidad real del concepto en la factura
+const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
+const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
 const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
 if (!confirmar) {
   alert("Operación cancelada");
@@ -532,8 +535,12 @@ const filtrados = productosActivosCache.filter(p =>
 
 // Usa la cantidad real del concepto (no de la descripción)
 const c = (data.conceptos_detalle || []).find(concepto => concepto.descripcion === descripcion);
-const cantidadOriginal = Number(c && c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
+                
+// Usa la cantidad real del concepto en la factura
+const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
+const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
 
 // 🔹 Confirmar antes de guardar
 const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
