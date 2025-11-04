@@ -252,10 +252,10 @@ if (conceptosDiv.innerHTML === "Cargando conceptos...") {
     }
   }
   conceptosDiv.innerHTML = html;
-}
+} // 🔹 Aquí se cierra correctamente el if antes del buscador
 
 // === Buscador con sugerencias por concepto (solo productos activos y cacheados) ===
-let productosActivosCache = null;
+let productosActivosCache = null; // cache global para no recargar cada vez
 
 conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
   btn.addEventListener("click", async (e) => {
@@ -268,10 +268,10 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
       const snapProd = await getDocs(refProd);
       productosActivosCache = snapProd.docs
         .map(d => ({ id: d.id, ...d.data() }))
-        .filter(p => p.activo === true);
+        .filter(p => p.activo === true); // solo productos activos
     }
 
-    // Crear modal de búsqueda
+    // Modal visual
     const modal = document.createElement("div");
     modal.style = `
       position:fixed;inset:0;background:rgba(0,0,0,0.5);
@@ -289,12 +289,11 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
       </div>
     `;
     document.body.appendChild(modal);
-
     const inputBusqueda = modal.querySelector("#inputBusquedaProd");
     const listaResultados = modal.querySelector("#resultadosProd");
     modal.querySelector("#cerrarModal").onclick = () => modal.remove();
 
-    // Filtro local rápido
+    // Filtrado rápido local
     inputBusqueda.addEventListener("input", () => {
       const valor = inputBusqueda.value.trim().toLowerCase();
       listaResultados.innerHTML = "";
