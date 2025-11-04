@@ -530,14 +530,24 @@ const filtrados = productosActivosCache.filter(p =>
                   };
                 });
 
-               const cantidadOriginal = Number(c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
+// Usa la cantidad real del concepto (no de la descripción)
+const c = (data.conceptos_detalle || []).find(concepto => concepto.descripcion === descripcion);
+const cantidadOriginal = Number(c && c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
+// 🔹 Confirmar antes de guardar
+const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
+if (!confirmar) {
+  alert("Operación cancelada");
+  modal.remove();
+  return;
+}
 
-                await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+// 🔹 Guardar vínculo
+await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
+modal.remove();
 
-                alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
-                modal.remove();
                 
                 // Actualizar la vista localmente
                 const conceptos = data.conceptos_detalle || [];
