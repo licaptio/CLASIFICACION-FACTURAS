@@ -306,25 +306,25 @@ card.addEventListener("click", async () => {
         position:fixed;inset:0;background:rgba(0,0,0,0.5);
         display:flex;align-items:center;justify-content:center;z-index:2000;
       `;
-modal.innerHTML = `
-  <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
-    <h3 style="margin-top:0;color:#00416A;">Buscar producto activo</h3>
-    <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
-           style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
-    <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
-         border:1px solid #ddd;border-radius:6px;"></div>
+      modal.innerHTML = `
+        <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
+          <h3 style="margin-top:0;color:#00416A;">Buscar producto activo</h3>
+          <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
+                 style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
+          <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
+               border:1px solid #ddd;border-radius:6px;"></div>
 
-    <!-- 🔹 Campo agregado -->
-    <div id="conversionBox" style="display:none;margin-top:10px;">
-      <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
-      <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
-             style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
-    </div>
+          <!-- 🔹 Campo agregado -->
+          <div id="conversionBox" style="display:none;margin-top:10px;">
+            <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
+            <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
+                   style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
+          </div>
 
-    <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
-            padding:6px 10px;border-radius:6px;">Cerrar</button>
-  </div>
-`;
+          <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
+                  padding:6px 10px;border-radius:6px;">Cerrar</button>
+        </div>
+      `;
 
       document.body.appendChild(modal);
       const inputBusqueda = modal.querySelector("#inputBusquedaProd");
@@ -356,74 +356,72 @@ modal.innerHTML = `
           `)
           .join("");
 
-listaResultados.querySelectorAll("div[data-id]").forEach(div => {
-  div.addEventListener("click", async () => {
-    const productoId = div.dataset.id;
-    const nombreProd = div.dataset.nombre;
+        listaResultados.querySelectorAll("div[data-id]").forEach(div => {
+          div.addEventListener("click", async () => {
+            const productoId = div.dataset.id;
+            const nombreProd = div.dataset.nombre;
 
-    // 🔹 Mostrar campo de conversión
-    const conversionBox = modal.querySelector("#conversionBox");
-    conversionBox.style.display = "block";
+            // 🔹 Mostrar campo de conversión
+            const conversionBox = modal.querySelector("#conversionBox");
+            conversionBox.style.display = "block";
 
-    // 🔹 Verifica si el producto ya tiene conversión registrada
-    const refProd = doc(db, "productos", productoId);
-    const snapProd = await getDoc(refProd);
-    if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
-      modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
-    }
+            // 🔹 Verifica si el producto ya tiene conversión registrada
+            const refProd = doc(db, "productos", productoId);
+            const snapProd = await getDoc(refProd);
+            if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
+              modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
+            }
 
-    // 🔹 Esperar confirmación del usuario
-    const piezasPorCaja = await new Promise(resolve => {
-      const input = modal.querySelector("#inputConversion");
-      input.focus();
+            // 🔹 Esperar confirmación del usuario
+            const piezasPorCaja = await new Promise(resolve => {
+              const input = modal.querySelector("#inputConversion");
+              input.focus();
 
-      const btnConfirm = document.createElement("button");
-      btnConfirm.textContent = "Vincular con conversión";
-      btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
-      conversionBox.appendChild(btnConfirm);
+              const btnConfirm = document.createElement("button");
+              btnConfirm.textContent = "Vincular con conversión";
+              btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
+              conversionBox.appendChild(btnConfirm);
 
-      btnConfirm.onclick = () => {
-        const valor = parseInt(input.value) || 1;
-        btnConfirm.remove();
-        resolve(valor);
-      };
-    });
+              btnConfirm.onclick = () => {
+                const valor = parseInt(input.value) || 1;
+                btnConfirm.remove();
+                resolve(valor);
+              };
+            });
 
-    const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
-    const cantidadTotal = cantidadOriginal * piezasPorCaja;
+            const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
+            const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
-    await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+            await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
-    alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
-    modal.remove();
-  });
-});
+            alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
+            modal.remove();
+            
+            // 🔹 Actualiza solo el concepto actual sin recargar todo
+            const item = Array.from(conceptosDiv.children).find(div =>
+              div.textContent.includes(descripcion)
+            );
+            if (item) {
+              const c = conceptos.find(concepto => concepto.descripcion === descripcion);
+              item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
+                <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
+                <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
 
+              // 🔹 Reasigna eventos locales sin recargar todo
+              item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
+                e.stopPropagation();
+                const fakeButton = document.createElement("button");
+                fakeButton.dataset.descripcion = descripcion;
+                fakeButton.classList.add("btnVincular");
+                fakeButton.click();
+              });
 
-// 🔹 Actualiza solo el concepto actual sin recargar todo
-const item = Array.from(conceptosDiv.children).find(div =>
-  div.textContent.includes(descripcion)
-);
-if (item) {
-  item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
-    <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
-    <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
-}
-
-// 🔹 Reasigna eventos locales sin recargar todo
-item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
-  e.stopPropagation();
-  const fakeButton = document.createElement("button");
-  fakeButton.dataset.descripcion = descripcion;
-  fakeButton.classList.add("btnVincular");
-  fakeButton.click();
-});
-
-item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
-  e.stopPropagation();
-  await eliminarVinculo(descripcion);
-});
-
+              item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
+                e.stopPropagation();
+                await eliminarVinculo(descripcion);
+              });
+            }
+          });
         });
       });
     });
@@ -441,7 +439,7 @@ item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) =>
     });
   });
 
-    // === Eliminar vínculo ===
+  // === Eliminar vínculo ===
   conceptosDiv.querySelectorAll(".btnEliminarVinculo").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -450,7 +448,7 @@ item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) =>
     });
   });
 
-} // 🔹 CIERRA card.addEventListener correctamente
+}); // ✅ CIERRA card.addEventListener
 
 // === ENVÍO DE FACTURA ===
 const boton = card.querySelector("button");
@@ -482,18 +480,15 @@ boton.addEventListener("click", async (e) => {
 });
 
 // === Clasificación visual ===
-    if (data.distribuido) {
-      distribuidasDiv.appendChild(card);
-    } else {
-      pendientesDiv.appendChild(card);
-    }
-  } // 🔹 CIERRA el for-loop
-} // 🔹 CIERRA la función cargarFacturas() - ESTA ES LA LÍNEA QUE DEBÍA MOVERSE
+if (data.distribuido) {
+  distribuidasDiv.appendChild(card);
+} else {
+  pendientesDiv.appendChild(card);
+}
+} // 🔹 CIERRA el for-loop
 
-// Estas líneas deben estar FUERA de la función
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
-  
 </script>
 </body>
 </html>
