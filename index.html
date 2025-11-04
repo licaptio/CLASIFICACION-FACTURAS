@@ -134,7 +134,8 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
+  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc,
+  query, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // === CONFIGURACIÓN FIREBASE ===
@@ -165,6 +166,17 @@ const almacenesDestino = [
   "Almacen_B41",
   "Almacen_Matriz"
 ];
+  // === CARGA GLOBAL DE PRODUCTOS ACTIVOS (UNA SOLA VEZ) ===
+let productosActivosCache = [];
+
+(async () => {
+  const refProd = collection(db, "productos");
+  const q = query(refProd, where("activo", "==", true));
+  const snapProd = await getDocs(q);
+  productosActivosCache = snapProd.docs.map(d => ({ id: d.id, ...d.data() }));
+  console.log("Productos activos cargados:", productosActivosCache.length);
+})();
+
 
 // Limpia la descripción para que pueda usarse como ID válido
 function normalizarId(texto) {
@@ -283,20 +295,10 @@ async function cargarFacturas() {
       }
 
       // === Vincular producto ===
-      let productosActivosCache = null;
-
       conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
         btn.addEventListener("click", async (e) => {
           e.stopPropagation();
           const descripcion = e.target.dataset.descripcion;
-
-          if (!productosActivosCache) {
-            const refProd = collection(db, "productos");
-            const snapProd = await getDocs(refProd);
-            productosActivosCache = snapProd.docs
-              .map(d => ({ id: d.id, ...d.data() }))
-              .filter(p => p.activo === true);
-          }
 
           // === MODAL ===
           const modal = document.createElement("div");
