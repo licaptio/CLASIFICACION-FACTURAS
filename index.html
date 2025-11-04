@@ -389,7 +389,12 @@ if (!productosActivosCache) {
 
               const cantidadOriginal = Number(c.cantidad && !isNaN(c.cantidad) ? c.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
-
+const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
+if (!confirmar) {
+  alert("Operación cancelada");
+  modal.remove();
+  return;
+}
 
                 await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
