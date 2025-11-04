@@ -635,6 +635,7 @@ boton.addEventListener("click", async (e) => {
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
 }); // ← cierra boton.addEventListener
+  } // ← agrega esta llave para cerrar el for (const docSnap of snap.docs)
 }   // ← cierra async function cargarFacturas
   
 // Ejecutar al inicio y al presionar actualizar
