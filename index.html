@@ -441,7 +441,7 @@ item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) =>
     });
   });
 
-  // === Eliminar vínculo ===
+    // === Eliminar vínculo ===
   conceptosDiv.querySelectorAll(".btnEliminarVinculo").forEach(btn => {
     btn.addEventListener("click", async (e) => {
       e.stopPropagation();
@@ -449,7 +449,8 @@ item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) =>
       await eliminarVinculo(descripcion);
     });
   });
-}); // ✅ cierre correcto del card.addEventListener
+
+}); // 🔹 CIERRA card.addEventListener correctamente
 
 // === ENVÍO DE FACTURA ===
 const boton = card.querySelector("button");
