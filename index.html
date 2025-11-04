@@ -182,16 +182,30 @@ async function obtenerVinculo(descripcion) {
   return snap.exists() ? snap.data() : null;
 }
 
-async function guardarVinculo(descripcion, productoId, conceptoProd) {
+async function guardarVinculo(descripcion, productoId, conceptoProd, cantidadOriginal = 1, conversion = 1, cantidadTotal = 1) {
   const idSeguro = normalizarId(descripcion);
   const ref = doc(db, "vinculos_factura_productos", idSeguro);
+
+  // Guardar vínculo normal
   await setDoc(ref, {
     descripcionFactura: descripcion,
     productoId,
     concepto: conceptoProd,
+    cantidadOriginal,
+    conversion,
+    cantidadTotal,
     fechaVinculo: new Date().toISOString()
   });
+
+  // 🔹 Actualizar el catálogo de productos con la conversión
+  if (conversion && conversion > 1) {
+    const refProd = doc(db, "productos", productoId);
+    await updateDoc(refProd, {
+      conversion_caja_piezas: conversion
+    });
+  }
 }
+
 // === ELIMINAR VÍNCULO EXISTENTE ===
 import { deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -292,17 +306,26 @@ card.addEventListener("click", async () => {
         position:fixed;inset:0;background:rgba(0,0,0,0.5);
         display:flex;align-items:center;justify-content:center;z-index:2000;
       `;
-      modal.innerHTML = `
-        <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
-          <h3 style="margin-top:0;color:#00416A;">Buscar producto activo</h3>
-          <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
-                 style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
-          <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
-               border:1px solid #ddd;border-radius:6px;"></div>
-          <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
-                  padding:6px 10px;border-radius:6px;">Cerrar</button>
-        </div>
-      `;
+modal.innerHTML = `
+  <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
+    <h3 style="margin-top:0;color:#00416A;">Buscar producto activo</h3>
+    <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
+           style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
+    <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
+         border:1px solid #ddd;border-radius:6px;"></div>
+
+    <!-- 🔹 Campo agregado -->
+    <div id="conversionBox" style="display:none;margin-top:10px;">
+      <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
+      <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
+             style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
+    </div>
+
+    <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
+            padding:6px 10px;border-radius:6px;">Cerrar</button>
+  </div>
+`;
+
       document.body.appendChild(modal);
       const inputBusqueda = modal.querySelector("#inputBusquedaProd");
       const listaResultados = modal.querySelector("#resultadosProd");
@@ -333,15 +356,74 @@ card.addEventListener("click", async () => {
           `)
           .join("");
 
-        listaResultados.querySelectorAll("div[data-id]").forEach(div => {
-          div.addEventListener("click", async () => {
-            const productoId = div.dataset.id;
-            const nombreProd = div.dataset.nombre;
-            await guardarVinculo(descripcion, productoId, nombreProd);
-            alert("✅ Vinculado con " + nombreProd);
-            modal.remove();
-            cargarFacturas();
-          });
+listaResultados.querySelectorAll("div[data-id]").forEach(div => {
+  div.addEventListener("click", async () => {
+    const productoId = div.dataset.id;
+    const nombreProd = div.dataset.nombre;
+
+    // 🔹 Mostrar campo de conversión
+    const conversionBox = modal.querySelector("#conversionBox");
+    conversionBox.style.display = "block";
+
+    // 🔹 Verifica si el producto ya tiene conversión registrada
+    const refProd = doc(db, "productos", productoId);
+    const snapProd = await getDoc(refProd);
+    if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
+      modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
+    }
+
+    // 🔹 Esperar confirmación del usuario
+    const piezasPorCaja = await new Promise(resolve => {
+      const input = modal.querySelector("#inputConversion");
+      input.focus();
+
+      const btnConfirm = document.createElement("button");
+      btnConfirm.textContent = "Vincular con conversión";
+      btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
+      conversionBox.appendChild(btnConfirm);
+
+      btnConfirm.onclick = () => {
+        const valor = parseInt(input.value) || 1;
+        btnConfirm.remove();
+        resolve(valor);
+      };
+    });
+
+    const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
+    const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
+    await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+
+    alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
+    modal.remove();
+  });
+});
+
+
+// 🔹 Actualiza solo el concepto actual sin recargar todo
+const item = Array.from(conceptosDiv.children).find(div =>
+  div.textContent.includes(descripcion)
+);
+if (item) {
+  item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
+    <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
+    <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
+}
+
+// 🔹 Reasigna eventos locales sin recargar todo
+item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
+  e.stopPropagation();
+  const fakeButton = document.createElement("button");
+  fakeButton.dataset.descripcion = descripcion;
+  fakeButton.classList.add("btnVincular");
+  fakeButton.click();
+});
+
+item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
+  e.stopPropagation();
+  await eliminarVinculo(descripcion);
+});
+
         });
       });
     });
