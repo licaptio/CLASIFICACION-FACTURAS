@@ -227,6 +227,12 @@ async function cargarFacturas() {
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
+  console.log("Ruta consultada:", ref.path);
+console.log("Cantidad de documentos:", snap.size);
+if (snap.empty) {
+  pendientesDiv.innerHTML = "<p style='padding:10px;color:red;'>⚠️ No se encontraron facturas en Firestore.</p>";
+  return;
+}
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
@@ -234,8 +240,8 @@ async function cargarFacturas() {
     const data = docSnap.data();
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
-    if (!coincideProv || !coincideFecha) continue;
-    if (data.clasificacion === "Gasto") continue;
+// if (!coincideProv || !coincideFecha) continue;
+// if (data.clasificacion === "Gasto") continue;
 
 
     const card = document.createElement("div");
@@ -647,7 +653,11 @@ boton.addEventListener("click", async (e) => {
 
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
-});
+}); // ← cierra boton.addEventListener
+  } // ← cierra el for (const docSnap of snap.docs)
+} // ← cierra la función cargarFacturas  
+btnActualizar.addEventListener("click", cargarFacturas);
+cargarFacturas();
 </script>
 </body>
 </html>
