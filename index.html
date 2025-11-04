@@ -387,8 +387,9 @@ async function cargarFacturas() {
                   };
                 });
 
-                const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
-                const cantidadTotal = cantidadOriginal * piezasPorCaja;
+              const cantidadOriginal = parseFloat(c.cantidad) || 1;
+const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
 
                 await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
@@ -531,8 +532,9 @@ async function cargarFacturas() {
                   };
                 });
 
-                const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
-                const cantidadTotal = cantidadOriginal * piezasPorCaja;
+               const cantidadOriginal = parseFloat(c.cantidad) || 1;
+const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
 
                 await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
