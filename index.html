@@ -363,13 +363,15 @@ boton.addEventListener("click", async (e) => {
 });
 
 // === Clasificación visual ===
-if (data.distribuido) {
-  distribuidasDiv.appendChild(card);
-} else {
-  pendientesDiv.appendChild(card);
-}
-}
+    if (data.distribuido) {
+      distribuidasDiv.appendChild(card);
+    } else {
+      pendientesDiv.appendChild(card);
+    }
+  } // 🔹 CIERRA el for-loop
+} // 🔹 CIERRA la función cargarFacturas() - ESTA ES LA LÍNEA QUE DEBÍA MOVERSE
 
+// Estas líneas deben estar FUERA de la función
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
   
