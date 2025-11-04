@@ -420,7 +420,9 @@ btnConfirm.onclick = async () => {
       });
     }
   }
-};
+}; // ✅ cierra btnConfirm.onclick
+
+}); // ✅ aquí va el cierre correcto del div.addEventListener("click", async () => {
 
       // === Re-vincular ===
       conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
