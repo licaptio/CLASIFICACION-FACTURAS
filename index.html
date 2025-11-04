@@ -333,32 +333,47 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
   });
 });
 
-    // === ENVÍO DE FACTURA ===
-    const boton = card.querySelector("button");
-    boton.addEventListener("click", async (e) => {
-      e.stopPropagation();
-      const select = card.querySelector("select");
-      const destino = select.value;
-      if (!destino) return alert("Selecciona un destino.");
+// === ENVÍO DE FACTURA ===
+const boton = card.querySelector("button");
+boton.addEventListener("click", async (e) => {
+  e.stopPropagation();
+  const select = card.querySelector("select");
+  const destino = select.value;
+  if (!destino) {
+    alert("Selecciona un destino.");
+    return;
+  }
 
-      const refDestino = doc(db, `almacenes/${destino}/entradas/${docSnap.id}`);
-      await setDoc(refDestino, { ...data, origen: "ALMACENCENTRALPDD", fechaDistribucion: new Date().toISOString() });
-      await updateDoc(doc(db, `almacenes/ALMACENCENTRALPDD/entradas/${docSnap.id}`), {
-        destino,
-        distribuido: true,
-        fechaDistribucion: new Date().toISOString()
-      });
-      alert("Factura enviada correctamente a " + destino);
-      cargarFacturas();
-    });
+  const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
+  await setDoc(refDestino, {
+    ...data,
+    origen: "ALMACENCENTRALPDD",
+    fechaDistribucion: new Date().toISOString()
+  });
 
-    if (data.distribuido) distribuidasDiv.appendChild(card);
-      else pendientesDiv.appendChild(card);
-    } // 🔹 Cierra el for (const docSnap of snap.docs)
-  }   // 🔹 Cierra la función cargarFacturas()
+  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
+  await updateDoc(refCentral, {
+    destino: destino,
+    distribuido: true,
+    fechaDistribucion: new Date().toISOString()
+  });
+
+  alert("✅ Factura enviada correctamente a " + destino);
+  cargarFacturas();
+});
+
+// === Clasificación visual ===
+if (data.distribuido) {
+  distribuidasDiv.appendChild(card);
+} else {
+  pendientesDiv.appendChild(card);
+}
+} // 🔹 Cierra el for (const docSnap of snap.docs)
+} // 🔹 Cierra la función cargarFacturas()
 
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
+  
 </script>
 </body>
 </html>
