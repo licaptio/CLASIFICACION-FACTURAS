@@ -234,6 +234,7 @@ async function cargarFacturas() {
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
     if (!coincideProv || !coincideFecha) continue;
+    if (data.tipoFactura === "gasto") continue;
 
     const card = document.createElement("div");
     card.className = "tarjeta";
@@ -249,6 +250,7 @@ async function cargarFacturas() {
     <select>
       <option value="">Seleccionar destino...</option>
       ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
+<option value="Gastos">Gastos</option>
     </select>
     <button>Enviar</button>
   </div>
@@ -609,10 +611,23 @@ boton.addEventListener("click", async (e) => {
   e.stopPropagation(); // ✅ Evita cerrar tarjeta
 
   const destino = select.value;
-  if (!destino) {
-    alert("Selecciona un destino.");
-    return;
-  }
+if (!destino) {
+  alert("Selecciona un destino.");
+  return;
+}
+
+// 🔹 Si se marca como Gasto
+if (destino === "Gastos") {
+  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
+  await updateDoc(refCentral, {
+    tipoFactura: "gasto",
+    fechaClasificacion: new Date().toISOString()
+  });
+
+  alert("🧾 Factura marcada como GASTO y removida de la lista.");
+  cargarFacturas();
+  return; // no pasa al flujo de distribución
+}
 
   // 🔹 Enlazar códigos internos a los conceptos antes de enviar
   const conceptos = data.conceptos_detalle || [];
