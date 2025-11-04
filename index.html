@@ -583,10 +583,13 @@ async function cargarFacturas() {
     }); // ✅ CIERRA card.addEventListener
 
 // === ENVÍO DE FACTURA ===
+const select = card.querySelector("select");
+select.addEventListener("click", (e) => e.stopPropagation()); // ✅ Evita colapso
+
 const boton = card.querySelector("button");
 boton.addEventListener("click", async (e) => {
-  e.stopPropagation();
-  const select = card.querySelector("select");
+  e.stopPropagation(); // ✅ Evita cerrar tarjeta
+
   const destino = select.value;
   if (!destino) {
     alert("Selecciona un destino.");
