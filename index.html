@@ -134,7 +134,7 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
+  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc, query, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // === CONFIGURACIÓN FIREBASE ===
@@ -290,14 +290,12 @@ async function cargarFacturas() {
           e.stopPropagation();
           const descripcion = e.target.dataset.descripcion;
 
-          if (!productosActivosCache) {
-            const refProd = collection(db, "productos");
-            const snapProd = await getDocs(refProd);
-            productosActivosCache = snapProd.docs
-              .map(d => ({ id: d.id, ...d.data() }))
-              .filter(p => p.activo === true);
-          }
-
+        if (!productosActivosCache) {
+  const refProd = collection(db, "productos");
+  const q = query(refProd, where("activo", "==", true));
+  const snapProd = await getDocs(q);
+  productosActivosCache = snapProd.docs.map(d => ({ id: d.id, ...d.data() }));
+}
           // === MODAL ===
           const modal = document.createElement("div");
           modal.style = `
