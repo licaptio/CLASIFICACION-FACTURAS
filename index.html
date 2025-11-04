@@ -227,6 +227,12 @@ async function cargarFacturas() {
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
+  console.log("Ruta consultada:", ref.path);
+console.log("Cantidad de documentos:", snap.size);
+if (snap.empty) {
+  pendientesDiv.innerHTML = "<p style='padding:10px;color:red;'>⚠️ No se encontraron facturas en Firestore.</p>";
+  return;
+}
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
