@@ -134,7 +134,7 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc, query, where
+  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // === CONFIGURACIÓN FIREBASE ===
@@ -163,8 +163,7 @@ const almacenesDestino = [
   "almacen_zapata",
   "almacenabarrotepdd",
   "Almacen_B41",
-  "Almacen_Matriz",
-  "Gasto" // ← nueva opción al final
+  "Almacen_Matriz"
 ];
 
 // Limpia la descripción para que pueda usarse como ID válido
@@ -227,23 +226,14 @@ async function cargarFacturas() {
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
-  console.log("Ruta consultada:", ref.path);
-console.log("Cantidad de documentos:", snap.size);
-if (snap.empty) {
-  pendientesDiv.innerHTML = "<p style='padding:10px;color:red;'>⚠️ No se encontraron facturas en Firestore.</p>";
-  return;
-}
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
   for (const docSnap of snap.docs) {
     const data = docSnap.data();
-    console.log("Documento:", docSnap.id, data);
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
-// if (!coincideProv || !coincideFecha) continue;
-// if (data.clasificacion === "Gasto") continue;
-
+    if (!coincideProv || !coincideFecha) continue;
 
     const card = document.createElement("div");
     card.className = "tarjeta";
@@ -284,7 +274,7 @@ if (snap.empty) {
             </div>`;
           } else {
             html += `<div>${c.cantidad} × ${c.descripcion}
-             <button class="btnVincular" data-descripcion="${c.descripcion}" data-cantidad="${c.cantidad}">Vincular producto</button>
+              <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
             </div>`;
           }
         }
@@ -300,12 +290,14 @@ if (snap.empty) {
           e.stopPropagation();
           const descripcion = e.target.dataset.descripcion;
 
-        if (!productosActivosCache) {
-  const refProd = collection(db, "productos");
-  const q = query(refProd, where("activo", "==", true));
-  const snapProd = await getDocs(q);
-  productosActivosCache = snapProd.docs.map(d => ({ id: d.id, ...d.data() }));
-}
+          if (!productosActivosCache) {
+            const refProd = collection(db, "productos");
+            const snapProd = await getDocs(refProd);
+            productosActivosCache = snapProd.docs
+              .map(d => ({ id: d.id, ...d.data() }))
+              .filter(p => p.activo === true);
+          }
+
           // === MODAL ===
           const modal = document.createElement("div");
           modal.style = `
@@ -395,7 +387,7 @@ if (snap.empty) {
                   };
                 });
 
-                const cantidadOriginal = parseFloat(btn.dataset.cantidad || 1);
+                const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
                 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
                 await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
@@ -539,7 +531,7 @@ if (snap.empty) {
                   };
                 });
 
-                const cantidadOriginal = parseFloat(c?.cantidad || 1);
+                const cantidadOriginal = parseFloat(descripcion.match(/^\d+(\.\d+)?/)) || 1;
                 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
                 await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
@@ -597,7 +589,7 @@ select.addEventListener("click", (e) => e.stopPropagation()); // ✅ Evita colap
 
 const boton = card.querySelector("button");
 boton.addEventListener("click", async (e) => {
-  e.stopPropagation();
+  e.stopPropagation(); // ✅ Evita cerrar tarjeta
 
   const destino = select.value;
   if (!destino) {
@@ -605,20 +597,7 @@ boton.addEventListener("click", async (e) => {
     return;
   }
 
-  // 🔹 Si es gasto, solo marcar la factura como clasificada como gasto
-  if (destino === "Gasto") {
-    const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
-    await updateDoc(refCentral, {
-      clasificacion: "Gasto",
-      distribuido: true,
-      fechaClasificacion: new Date().toISOString()
-    });
-    alert("✅ Factura clasificada como GASTO ADMINISTRATIVO/OPERATIVO.");
-    cargarFacturas(); // la saca de pendientes
-    return;
-  }
-
-  // 🔹 Si no es gasto, sigue flujo normal
+  // 🔹 Enlazar códigos internos a los conceptos antes de enviar
   const conceptos = data.conceptos_detalle || [];
   const conceptosEnlazados = [];
 
@@ -633,10 +612,11 @@ boton.addEventListener("click", async (e) => {
         cantidadTotal: vinculo.cantidadTotal
       });
     } else {
-      conceptosEnlazados.push(c);
+      conceptosEnlazados.push(c); // sin vínculo
     }
   }
 
+  // 🔹 Guardar en el nuevo almacén con los conceptos ya enlazados
   const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
   await setDoc(refDestino, {
     ...data,
@@ -645,6 +625,7 @@ boton.addEventListener("click", async (e) => {
     fechaDistribucion: new Date().toISOString()
   });
 
+  // 🔹 Actualizar el documento original en central
   const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
   await updateDoc(refCentral, {
     destino: destino,
@@ -655,8 +636,18 @@ boton.addEventListener("click", async (e) => {
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
 }); // ← cierra boton.addEventListener
-  } // ← cierra el for (const docSnap of snap.docs)
-} // ← cierra la función cargarFacturas  
+
+// Clasificación visual: pendiente o distribuida
+if (data.distribuido) {
+  distribuidasDiv.appendChild(card);
+} else {
+  pendientesDiv.appendChild(card);
+}
+
+} // ← cierra el for (const docSnap of snap.docs)
+} // ← cierra la función cargarFacturas()
+
+// Ejecutar al inicio y al presionar actualizar
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
 </script>
