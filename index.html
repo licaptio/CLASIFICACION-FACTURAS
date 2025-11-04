@@ -226,6 +226,7 @@ async function cargarFacturas() {
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
+  console.log("Docs encontrados:", snap.size);
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
