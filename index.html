@@ -134,7 +134,7 @@ import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
+  query, where, getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // === CONFIGURACIÓN FIREBASE ===
@@ -290,14 +290,14 @@ async function cargarFacturas() {
           e.stopPropagation();
           const descripcion = e.target.dataset.descripcion;
 
-          if (!productosActivosCache) {
-            const refProd = collection(db, "productos");
-            const snapProd = await getDocs(refProd);
-            productosActivosCache = snapProd.docs
-              .map(d => ({ id: d.id, ...d.data() }))
-              .filter(p => p.activo === true);
-          }
-
+if (!productosActivosCache) {
+  const refProd = query(collection(db, "productos"), where("activo", "==", true));
+  const snapProd = await getDocs(refProd);
+  productosActivosCache = snapProd.docs.map(d => ({
+    id: d.id,
+    concepto: d.data().concepto || ""
+  }));
+}
           // === MODAL ===
           const modal = document.createElement("div");
           modal.style = `
@@ -436,13 +436,14 @@ const cantidadTotal = cantidadOriginal * piezasPorCaja;
           const descripcion = e.target.dataset.descripcion;
           
           // Cargar productos activos si no están en cache
-          if (!productosActivosCache) {
-            const refProd = collection(db, "productos");
-            const snapProd = await getDocs(refProd);
-            productosActivosCache = snapProd.docs
-              .map(d => ({ id: d.id, ...d.data() }))
-              .filter(p => p.activo === true);
-          }
+if (!productosActivosCache) {
+  const refProd = query(collection(db, "productos"), where("activo", "==", true));
+  const snapProd = await getDocs(refProd);
+  productosActivosCache = snapProd.docs.map(d => ({
+    id: d.id,
+    concepto: d.data().concepto || ""
+  }));
+}
 
           // Crear modal para re-vincular
           const modal = document.createElement("div");
@@ -476,14 +477,13 @@ const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
           // Filtrado local para re-vincular
           inputBusqueda.addEventListener("input", () => {
-            const valor = inputBusqueda.value.trim().toLowerCase();
-            listaResultados.innerHTML = "";
-            if (!valor) return;
+const valor = inputBusqueda.value.trim().toLowerCase();
+if (!valor) { listaResultados.innerHTML = ""; return; }
 
-            const filtrados = productosActivosCache.filter(p =>
-              (p.concepto || "").toLowerCase().includes(valor)
-            );
-
+const filtrados = productosActivosCache.filter(p =>
+  p.concepto.toLowerCase().includes(valor)
+).slice(0, 50); // limita a 50 resultados para velocidad
+            
             if (!filtrados.length) {
               listaResultados.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
               return;
