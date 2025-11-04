@@ -353,9 +353,9 @@ conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
     });
 
     if (data.distribuido) distribuidasDiv.appendChild(card);
-    else pendientesDiv.appendChild(card);
-  }
-}
+      else pendientesDiv.appendChild(card);
+    } // 🔹 Cierra el for (const docSnap of snap.docs)
+  }   // 🔹 Cierra la función cargarFacturas()
 
 btnActualizar.addEventListener("click", cargarFacturas);
 cargarFacturas();
