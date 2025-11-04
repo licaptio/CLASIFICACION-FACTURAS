@@ -635,7 +635,21 @@ boton.addEventListener("click", async (e) => {
 
   alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
-  });
+}); // ← cierra boton.addEventListener
+
+// Clasificación visual: pendiente o distribuida
+if (data.distribuido) {
+  distribuidasDiv.appendChild(card);
+} else {
+  pendientesDiv.appendChild(card);
+}
+
+} // ← cierra el for (const docSnap of snap.docs)
+} // ← cierra la función cargarFacturas()
+
+// Ejecutar al inicio y al presionar actualizar
+btnActualizar.addEventListener("click", cargarFacturas);
+cargarFacturas();
 </script>
 </body>
 </html>
