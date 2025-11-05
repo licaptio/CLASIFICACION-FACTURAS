@@ -226,10 +226,16 @@ async function cargarFacturas() {
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
+  // 🔹 Ordenar los documentos por fecha descendente (más recientes primero)
+const docsOrdenados = snap.docs.sort((a, b) => {
+  const fa = new Date(a.data().fecha || 0);
+  const fb = new Date(b.data().fecha || 0);
+  return fb - fa; // de más nuevo a más viejo
+});
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
-  for (const docSnap of snap.docs) {
+  for (const docSnap of docsOrdenados) {
     const data = docSnap.data();
     const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
