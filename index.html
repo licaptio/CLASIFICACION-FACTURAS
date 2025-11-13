@@ -213,6 +213,12 @@ async function eliminarVinculo(descripcion) {
   const ref = doc(db, "vinculos_factura_productos", idSeguro);
   await deleteDoc(ref);
   alert("❌ Vínculo eliminado correctamente");
+// === Aplicar filtro automático desde selector externo ===
+const filtroExterno = localStorage.getItem("filtroProveedorActivo");
+if (filtroExterno) {
+  document.getElementById("filtroProveedor").value = filtroExterno;
+}
+
   cargarFacturas(); // refresca automáticamente la vista
 }
 
