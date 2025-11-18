@@ -111,11 +111,15 @@
 <body>
   <header>
     <h1>Clasificación de Facturas PDD – PROVSOFT</h1>
-    <div class="filtros">
-      <input type="text" id="filtroProveedor" placeholder="Filtrar por proveedor...">
-      <input type="date" id="filtroFecha">
-      <button id="btnActualizar">Actualizar</button>
-    </div>
+<div class="filtros">
+  <select id="selectProveedor">
+    <option value="">Todos los proveedores</option>
+  </select>
+
+  <input type="date" id="filtroFecha">
+
+  <button id="btnBuscar">Buscar</button>
+</div>
   </header>
 
   <main>
@@ -152,7 +156,7 @@ const db = getFirestore(app);
 
 const pendientesDiv = document.getElementById("pendientes");
 const distribuidasDiv = document.getElementById("distribuidas");
-const btnActualizar = document.getElementById("btnActualizar");
+
 
 const almacenesDestino = [
   "Almacen_Dulces",
@@ -221,13 +225,30 @@ if (filtroExterno) {
 
   cargarFacturas(); // refresca automáticamente la vista
 }
+async function cargarProveedores() {
+  const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
+  const snap = await getDocs(ref);
+
+  const proveedores = new Set();
+
+  snap.forEach(doc => {
+    const data = doc.data();
+    if (data.razon_social_emisor) {
+      proveedores.add(data.razon_social_emisor.trim());
+    }
+  });
+
+  const select = document.getElementById("selectProveedor");
+  select.innerHTML = `<option value="">Todos los proveedores</option>` +
+    [...proveedores].sort().map(p => `<option value="${p}">${p}</option>`).join("");
+}
 
 // === CARGA PRINCIPAL ===
 async function cargarFacturas() {
   pendientesDiv.innerHTML = "Cargando...";
   distribuidasDiv.innerHTML = "";
 
-  const filtroProv = document.getElementById("filtroProveedor").value.toLowerCase();
+  const filtroProv = document.getElementById("selectProveedor").value;
   const filtroFecha = document.getElementById("filtroFecha").value;
 
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
@@ -243,7 +264,7 @@ const docsOrdenados = snap.docs.sort((a, b) => {
 
   for (const docSnap of docsOrdenados) {
     const data = docSnap.data();
-    const coincideProv = !filtroProv || (data.razon_social_emisor || "").toLowerCase().includes(filtroProv);
+    const coincideProv = !filtroProv || data.razon_social_emisor === filtroProv;
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
     if (!coincideProv || !coincideFecha) continue;
     if (data.tipoFactura === "gasto") continue;
@@ -637,7 +658,7 @@ if (destino === "Gastos") {
   });
 
   alert("🧾 Factura marcada como GASTO y removida de la lista.");
-  cargarFacturas();
+  cargarProveedores(); // solo carga proveedores
   return; // no pasa al flujo de distribución
 }
 
@@ -692,8 +713,8 @@ if (data.distribuido) {
 } // ← cierra la función cargarFacturas()
 
 // Ejecutar al inicio y al presionar actualizar
-btnActualizar.addEventListener("click", cargarFacturas);
-cargarFacturas();
+btnBuscar.addEventListener("click", cargarFacturas);
+cargarProveedores();   // solo llena proveedor al inicio
 </script>
 </body>
 </html>
