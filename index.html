@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Clasificación de Facturas PDD – PROVSOFT</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
   <style>
     :root {
       --azul: #00416A;
@@ -12,7 +11,6 @@
       --card: #ffffff;
       --shadow: 0 4px 12px rgba(0,0,0,.15);
     }
-
     body {
       font-family: 'Poppins', sans-serif;
       margin: 0; padding: 0;
@@ -20,7 +18,6 @@
       color: #111;
       min-height: 100vh;
     }
-
     header {
       background: rgba(255,255,255,0.9);
       box-shadow: var(--shadow);
@@ -30,27 +27,21 @@
       position: sticky; top: 0;
       z-index: 10;
     }
-
     header h1 {
       margin: 0;
       color: var(--azul);
       font-size: 20px;
       font-weight: 600;
     }
-
     .filtros {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+      display: flex; gap: 10px; align-items: center;
     }
-
     input, select, button {
       padding: 6px 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
       font-family: inherit;
     }
-
     button {
       background: var(--resalte);
       color: white;
@@ -65,7 +56,6 @@
       padding: 20px;
       flex-wrap: wrap;
     }
-
     .columna {
       flex: 1 1 45%;
       background: rgba(255,255,255,0.9);
@@ -75,13 +65,11 @@
       min-height: 80vh;
       overflow-y: auto;
     }
-
     h2 {
       text-align: center;
       color: var(--azul);
       margin-top: 0;
     }
-
     .tarjeta {
       background: var(--card);
       border-radius: 10px;
@@ -92,18 +80,15 @@
       cursor: pointer;
     }
     .tarjeta:hover { transform: scale(1.01); }
-
     .tarjeta h3 {
       margin: 0;
       color: var(--azul);
       font-size: 16px;
     }
-
     .detalle {
       margin-top: 6px;
       font-size: 13px;
     }
-
     .conceptos {
       font-size: 12px;
       margin-top: 8px;
@@ -112,35 +97,29 @@
       padding: 6px;
       display: none;
     }
-
     .mostrar { display: block !important; }
-
     .selector {
       margin-top: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
     }
-
     .selector select {
       flex: 1;
       margin-right: 8px;
     }
   </style>
 </head>
-
 <body>
   <header>
     <h1>Clasificación de Facturas PDD – PROVSOFT</h1>
-    <div class="filtros">
-      <select id="selectProveedor">
-        <option value="">Todos los proveedores</option>
-      </select>
+<div class="filtros">
+  <select id="selectProveedor">
+    <option value="">Todos los proveedores</option>
+  </select>
 
-      <input type="date" id="filtroFecha">
+  <input type="date" id="filtroFecha">
 
-      <button id="btnBuscar">Buscar</button>
-    </div>
+  <button id="btnBuscar">Buscar</button>
+</div>
   </header>
 
   <main>
@@ -148,28 +127,21 @@
       <h2>Pendientes de distribuir</h2>
       <div id="pendientes"></div>
     </div>
-
     <div class="columna">
       <h2>Ya distribuidas</h2>
       <div id="distribuidas"></div>
     </div>
   </main>
 
-
-  <script type="module">
-/* =========================================================
-   🔵 BLOQUE 2 — INICIALIZACIÓN GLOBAL
-========================================================= */
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+<script type="module">
 import {
-  query, where, getFirestore, collection, getDocs, doc, setDoc,
-  updateDoc, getDoc, deleteDoc
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  query, where, getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-
-/* 🔹 CONFIG FIREBASE */
+// === CONFIGURACIÓN FIREBASE ===
 const firebaseConfig = {
   apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain: "inventariopv-643f1.firebaseapp.com",
@@ -182,20 +154,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* 🔹 CONFIG SUPABASE */
-const SUPABASE_URL = "https://cvpbtjlupswbyxenugpz.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY";
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-/* 🔹 ELEMENTOS DEL DOM */
 const pendientesDiv = document.getElementById("pendientes");
 const distribuidasDiv = document.getElementById("distribuidas");
-const btnBuscar = document.getElementById("btnBuscar");
-const selectProveedor = document.getElementById("selectProveedor");
-const filtroFecha = document.getElementById("filtroFecha");
 
-/* 🔹 ALMACENES DESTINO */
+
 const almacenesDestino = [
   "Almacen_Dulces",
   "Almacen_Liquidos",
@@ -208,11 +170,7 @@ const almacenesDestino = [
   "Almacen_Matriz"
 ];
 
-/* =========================================================
-   🟩 BLOQUE 3 — UTILIDADES
-========================================================= */
-
-/* 🔹 Normalizar descripciones (ID seguro) */
+// Limpia la descripción para que pueda usarse como ID válido
 function normalizarId(texto) {
   return texto
     .toLowerCase()
@@ -221,422 +179,542 @@ function normalizarId(texto) {
     .substring(0, 180);
 }
 
-/* 🔹 Obtener vínculo */
+// === FUNCIONES PARA VÍNCULOS ===
 async function obtenerVinculo(descripcion) {
-  const id = normalizarId(descripcion);
-  const ref = doc(db, "vinculos_factura_productos", id);
+  const idSeguro = normalizarId(descripcion);
+  const ref = doc(db, "vinculos_factura_productos", idSeguro);
   const snap = await getDoc(ref);
   return snap.exists() ? snap.data() : null;
 }
 
-/* 🔹 Guardar vínculo */
-async function guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, conversion, cantidadTotal) {
+async function guardarVinculo(descripcion, productoId, conceptoProd, cantidadOriginal = 1, conversion = 1, cantidadTotal = 1) {
+  const idSeguro = normalizarId(descripcion);
+  const ref = doc(db, "vinculos_factura_productos", idSeguro);
 
-  const ref = doc(db, "vinculos_factura_productos", normalizarId(descripcion));
-
+  // Guardar vínculo normal
   await setDoc(ref, {
     descripcionFactura: descripcion,
     productoId,
-    concepto: nombreProd,
+    concepto: conceptoProd,
     cantidadOriginal,
     conversion,
     cantidadTotal,
     fechaVinculo: new Date().toISOString()
   });
 
-  // Actualizar tabla productos (si procede)
-  if (conversion > 1) {
-    await updateDoc(doc(db, "productos", productoId), {
+  // 🔹 Actualizar el catálogo de productos con la conversión
+  if (conversion && conversion > 1) {
+    const refProd = doc(db, "productos", productoId);
+    await updateDoc(refProd, {
       conversion_caja_piezas: conversion
     });
   }
 }
 
-/* 🔹 Eliminar vínculo — CORREGIDO */
+// === ELIMINAR VÍNCULO EXISTENTE ===
 async function eliminarVinculo(descripcion) {
-  const ref = doc(db, "vinculos_factura_productos", normalizarId(descripcion));
+  const idSeguro = normalizarId(descripcion);
+  const ref = doc(db, "vinculos_factura_productos", idSeguro);
   await deleteDoc(ref);
   alert("❌ Vínculo eliminado correctamente");
+// === Aplicar filtro automático desde selector externo ===
+const filtroExterno = localStorage.getItem("filtroProveedorActivo");
+if (filtroExterno) {
+  document.getElementById("filtroProveedor").value = filtroExterno;
 }
 
-/* =========================================================
-   🟨 BLOQUE 4 — PROVEEDORES & FACTURAS
-========================================================= */
-
-/* 🔹 Cargar proveedores disponibles */
+  cargarFacturas(); // refresca automáticamente la vista
+}
 async function cargarProveedores() {
   const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
   const snap = await getDocs(ref);
 
   const proveedores = new Set();
+
   snap.forEach(doc => {
-    const r = doc.data().razon_social_emisor;
-    if (r) proveedores.add(r.trim());
+    const data = doc.data();
+    if (data.razon_social_emisor) {
+      proveedores.add(data.razon_social_emisor.trim());
+    }
   });
 
-  selectProveedor.innerHTML =
-    `<option value="">Todos los proveedores</option>` +
+  const select = document.getElementById("selectProveedor");
+  select.innerHTML = `<option value="">Todos los proveedores</option>` +
     [...proveedores].sort().map(p => `<option value="${p}">${p}</option>`).join("");
 }
 
-/* =========================================================
-   🟥 BLOQUE 5 — CARGAR FACTURAS + TARJETAS + EVENTOS
-========================================================= */
-
-let productosActivosCache = null;
-
-/* 🔹 Cargar productos activos solamente 1 vez */
-async function cargarProductosActivos() {
-  if (productosActivosCache) return productosActivosCache;
-
-  const ref = query(collection(db, "productos"), where("activo", "==", true));
-  const snap = await getDocs(ref);
-
-  productosActivosCache = snap.docs.map(d => ({
-    id: d.id,
-    concepto: d.data().concepto || ""
-  }));
-
-  return productosActivosCache;
-}
-
-/* 🔹 Crear modal (simple pero estable) */
-function crearModal(htmlInterno) {
-  const modal = document.createElement("div");
-  modal.style = `
-    position:fixed; inset:0; background:rgba(0,0,0,.45);
-    display:flex; justify-content:center; align-items:center; z-index:9999;
-  `;
-  modal.innerHTML = `
-    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:480px;">
-      ${htmlInterno}
-      <button id="cerrarModal" style="margin-top:10px; background:#00416A; color:white; border:none; padding:6px 10px; border-radius:6px; width:100%;">Cerrar</button>
-    </div>
-  `;
-  modal.querySelector("#cerrarModal").onclick = () => modal.remove();
-  document.body.appendChild(modal);
-  return modal;
-}
-
-/* =========================================================
-   🔸 FUNCIONES DE BÚSQUEDA Y VINCULACIÓN
-========================================================= */
-
-async function mostrarBuscadorProductos(descripcion, data, conceptosDiv) {
-
-  await cargarProductosActivos();
-
-  const modal = crearModal(`
-    <h3 style="margin-top:0;color:#00416A;">Seleccionar producto activo</h3>
-    <input id="inputBusquedaProd" type="text" placeholder="Buscar nombre..."
-      style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
-    <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;border:1px solid #ddd;border-radius:6px;"></div>
-    <div id="conversionBox" style="display:none;margin-top:10px;">
-      <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
-      <input id="inputConversion" type="number" min="1" value="1"
-        style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
-    </div>
-  `);
-
-  const busqueda = modal.querySelector("#inputBusquedaProd");
-  const lista = modal.querySelector("#resultadosProd");
-
-  /* 🔍 Filtrado rápido */
-  busqueda.addEventListener("input", () => {
-    const valor = busqueda.value.toLowerCase().trim();
-    lista.innerHTML = "";
-    if (!valor) return;
-
-    const encontrados = productosActivosCache
-      .filter(p => p.concepto.toLowerCase().includes(valor))
-      .slice(0, 30);
-
-    if (!encontrados.length) {
-      lista.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
-      return;
-    }
-
-    lista.innerHTML = encontrados.map(p => `
-      <div data-id="${p.id}" data-nombre="${p.concepto}"
-        style="padding:6px 8px;cursor:pointer;border-bottom:1px solid #eee;">
-        ${p.concepto}
-      </div>
-    `).join("");
-
-    lista.querySelectorAll("div[data-id]").forEach(item => {
-      item.onclick = () => seleccionarProducto(item, descripcion, data, modal, conceptosDiv);
-    });
-  });
-}
-
-/* 🔸 Manejo del producto seleccionado */
-async function seleccionarProducto(item, descripcion, data, modal, conceptosDiv) {
-
-  const productoId = item.dataset.id;
-  const nombreProd = item.dataset.nombre;
-
-  const conversionBox = modal.querySelector("#conversionBox");
-  const conversionInput = modal.querySelector("#inputConversion");
-
-  conversionBox.style.display = "block";
-
-  // Ver conversión existente
-  const snap = await getDoc(doc(db, "productos", productoId));
-  if (snap.exists() && snap.data().conversion_caja_piezas) {
-    conversionInput.value = snap.data().conversion_caja_piezas;
-  }
-
-  // Confirmar vínculo
-  const btnConfirm = document.createElement("button");
-  btnConfirm.textContent = "Vincular";
-  btnConfirm.style = `
-    margin-top:10px; background:#0c6cbd; color:white;
-    border:none; padding:6px 10px; border-radius:6px; width:100%;
-  `;
-  conversionBox.appendChild(btnConfirm);
-
-  btnConfirm.onclick = async () => {
-    const conversion = parseInt(conversionInput.value) || 1;
-
-    const conceptoReal = data.conceptos_detalle.find(c => c.descripcion === descripcion);
-    const cantidadOriginal = Number(conceptoReal?.cantidad || 1);
-    const cantidadTotal = cantidadOriginal * conversion;
-
-    const confirma = confirm(
-      `Confirmar:\n${cantidadOriginal} × ${conversion} = ${cantidadTotal} piezas`
-    );
-    if (!confirma) return;
-
-    await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, conversion, cantidadTotal);
-
-    alert(`✅ Vinculado con ${nombreProd}`);
-
-    modal.remove();
-    refrescarConceptos(data, conceptosDiv);
-  };
-}
-
-/* =========================================================
-   🟦 Renderizar conceptos dentro de una factura
-========================================================= */
-
-async function refrescarConceptos(data, div) {
-  div.innerHTML = "Cargando...";
-
-  let html = "";
-
-  for (const c of data.conceptos_detalle) {
-    const vinc = await obtenerVinculo(c.descripcion);
-
-    if (vinc) {
-      html += `
-        <div>
-          ✅ ${c.cantidad} × ${c.descripcion} — <b>${vinc.concepto}</b>
-          <button class="btnReVincular" data-descripcion="${c.descripcion}">🔁</button>
-          <button class="btnEliminarVinculo" data-descripcion="${c.descripcion}">🗑</button>
-        </div>
-      `;
-    } else {
-      html += `
-        <div>
-          ${c.cantidad} × ${c.descripcion}
-          <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular</button>
-        </div>
-      `;
-    }
-  }
-
-  div.innerHTML = html;
-
-  asignarEventosConceptos(data, div);
-}
-
-/* 🔹 Asignar eventos de botones (sin duplicación) */
-function asignarEventosConceptos(data, div) {
-
-  div.querySelectorAll(".btnVincular").forEach(btn => {
-    btn.onclick = () =>
-      mostrarBuscadorProductos(btn.dataset.descripcion, data, div);
-  });
-
-  div.querySelectorAll(".btnReVincular").forEach(btn => {
-    btn.onclick = () =>
-      mostrarBuscadorProductos(btn.dataset.descripcion, data, div);
-  });
-
-  div.querySelectorAll(".btnEliminarVinculo").forEach(btn => {
-    btn.onclick = async () => {
-      await eliminarVinculo(btn.dataset.descripcion);
-      refrescarConceptos(data, div);
-    };
-  });
-
-}
-
-/* =========================================================
-   🔥 CARGAR FACTURAS COMPLETAS
-========================================================= */
-
+// === CARGA PRINCIPAL ===
 async function cargarFacturas() {
-
   pendientesDiv.innerHTML = "Cargando...";
   distribuidasDiv.innerHTML = "";
 
-  const filtroProv = selectProveedor.value;
-  const filtroFec = filtroFecha.value;
+  const filtroProv = document.getElementById("selectProveedor").value;
+  const filtroFecha = document.getElementById("filtroFecha").value;
 
-  const snap = await getDocs(collection(db, "almacenes/ALMACENCENTRALPDD/entradas"));
-
-  const docs = snap.docs.sort((a, b) =>
-    new Date(b.data().fecha || 0) - new Date(a.data().fecha || 0)
-  );
-
+  const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
+  const snap = await getDocs(ref);
+  // 🔹 Ordenar los documentos por fecha descendente (más recientes primero)
+const docsOrdenados = snap.docs.sort((a, b) => {
+  const fa = new Date(a.data().fecha || 0);
+  const fb = new Date(b.data().fecha || 0);
+  return fb - fa; // de más nuevo a más viejo
+});
   pendientesDiv.innerHTML = "";
   distribuidasDiv.innerHTML = "";
 
-  for (const d of docs) {
-    const data = d.data();
-
+  for (const docSnap of docsOrdenados) {
+    const data = docSnap.data();
+    const coincideProv = !filtroProv || data.razon_social_emisor === filtroProv;
+    const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
+    if (!coincideProv || !coincideFecha) continue;
     if (data.tipoFactura === "gasto") continue;
-    if (filtroProv && data.razon_social_emisor !== filtroProv) continue;
-    if (filtroFec && !(data.fecha || "").startsWith(filtroFec)) continue;
 
     const card = document.createElement("div");
     card.className = "tarjeta";
-
     card.innerHTML = `
-      <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
-      <div class="detalle">
-        <b>Fecha:</b> ${data.fecha || "N/A"}<br>
-        <b>Total:</b> $${Number(data.total || 0).toFixed(2)}<br>
-        <b>UUID:</b> ${data.uuid_cfdi || d.id}
-      </div>
+  <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
+  <div class="detalle">
+    <b>Fecha:</b> ${data.fecha || "N/A"}<br>
+    <b>Total:</b> $${(data.total ? data.total.toFixed(2) : "0.00")}<br>
+    <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
+  </div>
+  <div class="conceptos">Cargando conceptos...</div>
+  <div class="selector" style="display:none;">
+    <select>
+      <option value="">Seleccionar destino...</option>
+      ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
+<option value="Gastos">Gastos</option>
+    </select>
+    <button>Enviar</button>
+  </div>
+`;
 
-      <div class="conceptos">Cargando conceptos...</div>
-
-      <div class="selector" style="display:none;">
-        <select>
-          <option value="">Seleccionar destino...</option>
-          ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
-          <option value="Gastos">Gastos</option>
-        </select>
-        <button class="btnEnviar">Enviar</button>
-      </div>
-    `;
-
-    const conceptosDiv = card.querySelector(".conceptos");
-    const selectorDiv = card.querySelector(".selector");
-
-    /* 🔹 Abrir tarjeta */
-    card.onclick = () => {
+    // === ABRIR TARJETA ===
+    card.addEventListener("click", async () => {
+      const conceptosDiv = card.querySelector(".conceptos");
+      const selectorDiv = card.querySelector(".selector");
       conceptosDiv.classList.toggle("mostrar");
-      selectorDiv.style.display =
-        selectorDiv.style.display === "none" ? "flex" : "none";
+      selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
 
       if (conceptosDiv.innerHTML === "Cargando conceptos...") {
-        refrescarConceptos(data, conceptosDiv);
+        const conceptos = data.conceptos_detalle || [];
+        let html = "";
+
+        for (const c of conceptos) {
+          const vinculo = await obtenerVinculo(c.descripcion);
+          if (vinculo) {
+            html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b>
+              <button class="btnReVincular" data-descripcion="${c.descripcion}">🔁 Cambiar</button>
+              <button class="btnEliminarVinculo" data-descripcion="${c.descripcion}">🗑</button>
+            </div>`;
+          } else {
+            html += `<div>${c.cantidad} × ${c.descripcion}
+              <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
+            </div>`;
+          }
+        }
+
+        conceptosDiv.innerHTML = html;
       }
-    };
 
-    /* 🔹 Enviar factura */
-    card.querySelector(".btnEnviar").onclick = (e) => {
-      e.stopPropagation();
-      enviarFactura(data, d.id, card);
-    };
+      // === Vincular producto ===
+      let productosActivosCache = null;
 
-    /* Clasificación visual */
-    if (data.distribuido) distribuidasDiv.appendChild(card);
-    else pendientesDiv.appendChild(card);
-  }
+      conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const descripcion = e.target.dataset.descripcion;
+
+if (!productosActivosCache) {
+  const refProd = query(collection(db, "productos"), where("activo", "==", true));
+  const snapProd = await getDocs(refProd);
+  productosActivosCache = snapProd.docs.map(d => ({
+    id: d.id,
+    concepto: d.data().concepto || ""
+  }));
 }
+          // === MODAL ===
+          const modal = document.createElement("div");
+          modal.style = `
+            position:fixed;inset:0;background:rgba(0,0,0,0.5);
+            display:flex;align-items:center;justify-content:center;z-index:2000;
+          `;
+          modal.innerHTML = `
+            <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
+              <h3 style="margin-top:0;color:#00416A;">Buscar producto activo</h3>
+              <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
+                     style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
+              <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
+                   border:1px solid #ddd;border-radius:6px;"></div>
 
-/* =========================================================
-   🟦 BLOQUE 6 — ENVÍO / SUPABASE / CLASIFICACIÓN
-========================================================= */
+              <!-- 🔹 Campo agregado -->
+              <div id="conversionBox" style="display:none;margin-top:10px;">
+                <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
+                <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
+                       style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
+              </div>
 
-/* 🔹 Validar si ya existe en Supabase */
-async function facturaExisteEnSupabase(uuid) {
-  const { data, error } = await supabase
-    .from("xml_pdd")
-    .select("uuid")
-    .eq("uuid", uuid);
+              <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
+                      padding:6px 10px;border-radius:6px;">Cerrar</button>
+            </div>
+          `;
 
-  if (error) {
-    console.warn("Error Supabase:", error);
-    return false;
-  }
+          document.body.appendChild(modal);
+          const inputBusqueda = modal.querySelector("#inputBusquedaProd");
+          const listaResultados = modal.querySelector("#resultadosProd");
+          modal.querySelector("#cerrarModal").onclick = () => modal.remove();
 
-  return data.length > 0;
-}
+          // === Filtrado local ===
+          inputBusqueda.addEventListener("input", () => {
+            const valor = inputBusqueda.value.trim().toLowerCase();
+            listaResultados.innerHTML = "";
+            if (!valor) return;
 
-/* 🔹 Enviar factura */
-async function enviarFactura(data, idDoc, card) {
-  const select = card.querySelector("select");
-  const destino = select.value;
+            const filtrados = productosActivosCache.filter(p =>
+              (p.concepto || "").toLowerCase().includes(valor)
+            );
 
-  if (!destino) {
-    alert("Selecciona un destino.");
-    return;
-  }
+            if (!filtrados.length) {
+              listaResultados.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
+              return;
+            }
 
-  /* 🔸 Si se marca como gasto */
-  if (destino === "Gastos") {
-    await updateDoc(doc(db, "almacenes/ALMACENCENTRALPDD/entradas", idDoc), {
-      tipoFactura: "gasto",
-      fechaClasificacion: new Date().toISOString()
-    });
-    alert("🧾 Marcada como GASTO");
-    cargarFacturas();
-    return;
-  }
+            listaResultados.innerHTML = filtrados
+              .slice(0, 20)
+              .map(p => `
+                <div data-id="${p.id}" data-nombre="${p.concepto}"
+                     style="padding:6px 8px;cursor:pointer;border-bottom:1px solid #eee;">
+                  ${p.concepto}
+                </div>
+              `)
+              .join("");
 
-  /* 🔸 Validación Supabase */
-  const uuid = (data.uuid_cfdi || idDoc).trim().toUpperCase();
+            listaResultados.querySelectorAll("div[data-id]").forEach(div => {
+              div.addEventListener("click", async () => {
+                const productoId = div.dataset.id;
+                const nombreProd = div.dataset.nombre;
 
-  if (await facturaExisteEnSupabase(uuid)) {
-    alert("⛔ Esta factura YA EXISTE en Supabase.");
-    return;
-  }
-/* 🔸 Validación en Firebase destino */
-if (await facturaExisteEnFirebase(destino, idDoc)) {
-  alert(`⛔ La factura ya existe en el almacén destino: ${destino}. No se reemplaza.`);
+                // 🔹 Mostrar campo de conversión
+                const conversionBox = modal.querySelector("#conversionBox");
+                conversionBox.style.display = "block";
+
+                // 🔹 Verifica si el producto ya tiene conversión registrada
+                const refProd = doc(db, "productos", productoId);
+                const snapProd = await getDoc(refProd);
+                if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
+                  modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
+                }
+
+                // 🔹 Esperar confirmación del usuario
+                const piezasPorCaja = await new Promise(resolve => {
+                  const input = modal.querySelector("#inputConversion");
+                  input.focus();
+
+                  const btnConfirm = document.createElement("button");
+                  btnConfirm.textContent = "Vincular con conversión";
+                  btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
+                  conversionBox.appendChild(btnConfirm);
+
+                  btnConfirm.onclick = () => {
+                    const valor = parseInt(input.value) || 1;
+                    btnConfirm.remove();
+                    resolve(valor);
+                  };
+                });
+
+// Usa la cantidad real del concepto en la factura
+const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
+const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
+const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
+const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
+if (!confirmar) {
+  alert("Operación cancelada");
+  modal.remove();
   return;
 }
 
-  /* 🔸 Preparar conceptos vinculados */
-  const conceptos = await Promise.all(
-    data.conceptos_detalle.map(async c => {
-      const vinc = await obtenerVinculo(c.descripcion);
-      return vinc ? { ...c, ...vinc } : c;
-    })
-  );
+await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
 
-  /* 🔸 Guardar en almacén destino */
-  await setDoc(doc(db, `almacenes/${destino}/entradas`, idDoc), {
+alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
+
+// 🔹 Forzar recarga del listado actualizado
+conceptosDiv.innerHTML = "Actualizando...";
+const conceptosActualizados = data.conceptos_detalle || [];
+let html = "";
+
+for (const c2 of conceptosActualizados) {
+  const vinculoNuevo = await obtenerVinculo(c2.descripcion);
+  if (vinculoNuevo) {
+    html += `<div>✅ ${c2.cantidad} × ${c2.descripcion} — vinculado a <b>${vinculoNuevo.concepto}</b>
+      <button class="btnReVincular" data-descripcion="${c2.descripcion}">🔁 Cambiar</button>
+      <button class="btnEliminarVinculo" data-descripcion="${c2.descripcion}">🗑</button>
+    </div>`;
+  } else {
+    html += `<div>${c2.cantidad} × ${c2.descripcion}
+      <button class="btnVincular" data-descripcion="${c2.descripcion}">Vincular producto</button>
+    </div>`;
+  }
+}
+
+conceptosDiv.innerHTML = html;
+                modal.remove();
+              }); // ← cierra div.addEventListener("click", async ...)
+            }); // ← cierra listaResultados.querySelectorAll
+          }); // ← cierra inputBusqueda.addEventListener
+        }); // ← cierra btn.addEventListener
+      }); // ← cierra conceptosDiv.querySelectorAll(".btnVincular")
+
+      // === Re-vincular ===
+      conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const descripcion = e.target.dataset.descripcion;
+          
+          // Cargar productos activos si no están en cache
+if (!productosActivosCache) {
+  const refProd = query(collection(db, "productos"), where("activo", "==", true));
+  const snapProd = await getDocs(refProd);
+  productosActivosCache = snapProd.docs.map(d => ({
+    id: d.id,
+    concepto: d.data().concepto || ""
+  }));
+}
+
+          // Crear modal para re-vincular
+          const modal = document.createElement("div");
+          modal.style = `
+            position:fixed;inset:0;background:rgba(0,0,0,0.5);
+            display:flex;align-items:center;justify-content:center;z-index:2000;
+          `;
+          modal.innerHTML = `
+            <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
+              <h3 style="margin-top:0;color:#00416A;">Cambiar producto vinculado</h3>
+              <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
+                     style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
+              <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
+                   border:1px solid #ddd;border-radius:6px;"></div>
+
+              <div id="conversionBox" style="display:none;margin-top:10px;">
+                <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
+                <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
+                       style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
+              </div>
+
+              <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
+                      padding:6px 10px;border-radius:6px;">Cerrar</button>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+          const inputBusqueda = modal.querySelector("#inputBusquedaProd");
+          const listaResultados = modal.querySelector("#resultadosProd");
+          modal.querySelector("#cerrarModal").onclick = () => modal.remove();
+
+          // Filtrado local para re-vincular
+          inputBusqueda.addEventListener("input", () => {
+const valor = inputBusqueda.value.trim().toLowerCase();
+if (!valor) { listaResultados.innerHTML = ""; return; }
+
+const filtrados = productosActivosCache.filter(p =>
+  p.concepto.toLowerCase().includes(valor)
+).slice(0, 50); // limita a 50 resultados para velocidad
+            
+            if (!filtrados.length) {
+              listaResultados.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
+              return;
+            }
+
+            listaResultados.innerHTML = filtrados
+              .slice(0, 20)
+              .map(p => `
+                <div data-id="${p.id}" data-nombre="${p.concepto}"
+                     style="padding:6px 8px;cursor:pointer;border-bottom:1px solid #eee;">
+                  ${p.concepto}
+                </div>
+              `)
+              .join("");
+
+            listaResultados.querySelectorAll("div[data-id]").forEach(div => {
+              div.addEventListener("click", async () => {
+                const productoId = div.dataset.id;
+                const nombreProd = div.dataset.nombre;
+
+                // Mostrar campo de conversión
+                const conversionBox = modal.querySelector("#conversionBox");
+                conversionBox.style.display = "block";
+
+                // Verificar conversión existente
+                const refProd = doc(db, "productos", productoId);
+                const snapProd = await getDoc(refProd);
+                if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
+                  modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
+                }
+
+                // Esperar confirmación del usuario
+                const piezasPorCaja = await new Promise(resolve => {
+                  const input = modal.querySelector("#inputConversion");
+                  input.focus();
+
+                  const btnConfirm = document.createElement("button");
+                  btnConfirm.textContent = "Vincular con conversión";
+                  btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
+                  conversionBox.appendChild(btnConfirm);
+
+                  btnConfirm.onclick = () => {
+                    const valor = parseInt(input.value) || 1;
+                    btnConfirm.remove();
+                    resolve(valor);
+                  };
+                });
+
+// Usa la cantidad real del concepto (no de la descripción)
+const c = (data.conceptos_detalle || []).find(concepto => concepto.descripcion === descripcion);
+                
+// Usa la cantidad real del concepto en la factura
+const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
+const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
+const cantidadTotal = cantidadOriginal * piezasPorCaja;
+
+
+// 🔹 Confirmar antes de guardar
+const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
+if (!confirmar) {
+  alert("Operación cancelada");
+  modal.remove();
+  return;
+}
+
+// 🔹 Guardar vínculo
+await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
+alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
+modal.remove();
+
+                
+                // Actualizar la vista localmente
+                const conceptos = data.conceptos_detalle || [];
+                const item = Array.from(conceptosDiv.children).find(div =>
+                  div.textContent.includes(descripcion)
+                );
+                if (item) {
+                  const c = conceptos.find(concepto => concepto.descripcion === descripcion);
+                  if (c) {
+                    item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
+                      <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
+                      <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
+
+                    // Reasignar eventos
+                    item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
+                      e.stopPropagation();
+                      // Aquí se reutiliza toda esta lógica cuando se haga click nuevamente
+                      const fakeButton = document.createElement("button");
+                      fakeButton.dataset.descripcion = descripcion;
+                      fakeButton.classList.add("btnReVincular");
+                      fakeButton.click();
+                    });
+
+                    item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
+                      e.stopPropagation();
+                      await eliminarVinculo(descripcion);
+                    });
+                  }
+                }
+              });
+            });
+          });
+        });
+      });
+      // === Eliminar vínculo ===
+      conceptosDiv.querySelectorAll(".btnEliminarVinculo").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const descripcion = e.target.dataset.descripcion;
+          await eliminarVinculo(descripcion);
+        });
+      });
+
+    }); // ✅ CIERRA card.addEventListener
+
+// === ENVÍO DE FACTURA ===
+const select = card.querySelector("select");
+select.addEventListener("click", (e) => e.stopPropagation()); // ✅ Evita colapso
+
+const boton = card.querySelector("button");
+boton.addEventListener("click", async (e) => {
+  e.stopPropagation(); // ✅ Evita cerrar tarjeta
+
+  const destino = select.value;
+if (!destino) {
+  alert("Selecciona un destino.");
+  return;
+}
+
+// 🔹 Si se marca como Gasto
+if (destino === "Gastos") {
+  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
+  await updateDoc(refCentral, {
+    tipoFactura: "gasto",
+    fechaClasificacion: new Date().toISOString()
+  });
+
+  alert("🧾 Factura marcada como GASTO y removida de la lista.");
+  cargarProveedores(); // solo carga proveedores
+  return; // no pasa al flujo de distribución
+}
+
+  // 🔹 Enlazar códigos internos a los conceptos antes de enviar
+  const conceptos = data.conceptos_detalle || [];
+  const conceptosEnlazados = [];
+
+  for (const c of conceptos) {
+    const vinculo = await obtenerVinculo(c.descripcion);
+    if (vinculo) {
+      conceptosEnlazados.push({
+        ...c,
+        productoId: vinculo.productoId,
+        productoInterno: vinculo.concepto,
+        conversion: vinculo.conversion,
+        cantidadTotal: vinculo.cantidadTotal
+      });
+    } else {
+      conceptosEnlazados.push(c); // sin vínculo
+    }
+  }
+
+  // 🔹 Guardar en el nuevo almacén con los conceptos ya enlazados
+  const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
+  await setDoc(refDestino, {
     ...data,
-    conceptos_detalle: conceptos,
+    conceptos_detalle: conceptosEnlazados,
     origen: "ALMACENCENTRALPDD",
     fechaDistribucion: new Date().toISOString()
   });
 
-  /* 🔸 Actualizar central */
-  await updateDoc(doc(db, "almacenes/ALMACENCENTRALPDD/entradas", idDoc), {
+  // 🔹 Actualizar el documento original en central
+  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
+  await updateDoc(refCentral, {
+    destino: destino,
     distribuido: true,
-    destino,
     fechaDistribucion: new Date().toISOString()
   });
 
-  alert(`✅ Factura enviada a ${destino}`);
+  alert("✅ Factura enviada correctamente a " + destino);
   cargarFacturas();
+}); // ← cierra boton.addEventListener
+
+// Clasificación visual: pendiente o distribuida
+if (data.distribuido) {
+  distribuidasDiv.appendChild(card);
+} else {
+  pendientesDiv.appendChild(card);
 }
 
-/* =========================================================
-   🟦 EJECUCIÓN INICIAL
-========================================================= */
+} // ← cierra el for (const docSnap of snap.docs)
+} // ← cierra la función cargarFacturas()
 
-btnBuscar.onclick = cargarFacturas;
-
-cargarProveedores();
-cargarFacturas();
-
+// Ejecutar al inicio y al presionar actualizar
+btnBuscar.addEventListener("click", cargarFacturas);
+cargarProveedores();   // solo llena proveedor al inicio
 </script>
+</body>
+</html>
