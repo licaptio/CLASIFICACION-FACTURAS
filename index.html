@@ -150,6 +150,13 @@ const firebaseConfig = {
   messagingSenderId: "96242533231",
   appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
 };
+// === CONFIG SUPABASE ===
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+const SUPABASE_URL = "https://cvpbtjlupswbyxenugpz.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -634,6 +641,26 @@ modal.remove();
       });
 
     }); // ✅ CIERRA card.addEventListener
+// === VALIDACIÓN SUPABASE: EVITAR DUPLICADOS ===
+async function facturaExisteEnSupabase(uuid) {
+  try {
+    const { data, error } = await supabase
+      .from("almacen_central")
+      .select("uuid_cfdi")
+      .eq("uuid_cfdi", uuid)
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error revisando en Supabase:", error);
+      return false; // No bloqueamos si hay error
+    }
+
+    return data !== null; // true = YA EXISTE
+  } catch (err) {
+    console.error("Excepción al validar en Supabase:", err);
+    return false;
+  }
+}
 
 // === ENVÍO DE FACTURA ===
 const select = card.querySelector("select");
@@ -680,7 +707,13 @@ if (destino === "Gastos") {
       conceptosEnlazados.push(c); // sin vínculo
     }
   }
+// === VALIDACIÓN SUPABASE ===
+const uuid = data.uuid_cfdi || docSnap.id;
 
+if (await facturaExisteEnSupabase(uuid)) {
+  alert("⛔ Esta factura YA EXISTE en Supabase. No se volverá a subir.");
+  return;
+}
   // 🔹 Guardar en el nuevo almacén con los conceptos ya enlazados
   const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
   await setDoc(refDestino, {
