@@ -644,11 +644,12 @@ modal.remove();
 // === VALIDACIÓN SUPABASE: EVITAR DUPLICADOS ===
 async function facturaExisteEnSupabase(uuid) {
   try {
-    const { data, error } = await supabase
-      .from("almacen_central")
-      .select("uuid_cfdi")
-      .eq("uuid_cfdi", uuid)
-      .maybeSingle();
+const { data, error } = await supabase
+    .from("deuda_limpia_pdd")
+    .select("uuid_cfdi")
+    .eq("uuid_cfdi", uuid)
+    .maybeSingle();
+
     
     if (error) {
       console.error("Error revisando en Supabase:", error);
