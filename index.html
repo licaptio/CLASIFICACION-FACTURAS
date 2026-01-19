@@ -220,7 +220,7 @@ async function eliminarVinculo(descripcion) {
 // === Aplicar filtro automático desde selector externo ===
 const filtroExterno = localStorage.getItem("filtroProveedorActivo");
 if (filtroExterno) {
-  document.getElementById("filtroProveedor").value = filtroExterno;
+  document.getElementById("selectProveedor").value = filtroExterno;
 }
 
   cargarFacturas(); // refresca automáticamente la vista
@@ -231,16 +231,20 @@ async function cargarProveedores() {
 
   const proveedores = new Set();
 
-  snap.forEach(doc => {
-    const data = doc.data();
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
     if (data.razon_social_emisor) {
       proveedores.add(data.razon_social_emisor.trim());
     }
   });
 
   const select = document.getElementById("selectProveedor");
-  select.innerHTML = `<option value="">Todos los proveedores</option>` +
-    [...proveedores].sort().map(p => `<option value="${p}">${p}</option>`).join("");
+  select.innerHTML =
+    `<option value="">Todos los proveedores</option>` +
+    [...proveedores]
+      .sort()
+      .map(p => `<option value="${p}">${p}</option>`)
+      .join("");
 }
 
 // === CARGA PRINCIPAL ===
@@ -265,9 +269,31 @@ const docsOrdenados = snap.docs.sort((a, b) => {
   for (const docSnap of docsOrdenados) {
     const data = docSnap.data();
     const coincideProv = !filtroProv || data.razon_social_emisor === filtroProv;
-    const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
+   let coincideFecha = true;
+if (filtroFecha && data.fecha) {
+  const fechaStr = typeof data.fecha === "string"
+    ? data.fecha
+    : data.fecha.toDate?.().toISOString() || "";
+  coincideFecha = fechaStr.includes(filtroFecha);
+}
     if (!coincideProv || !coincideFecha) continue;
-    if (data.tipoFactura === "gasto") continue;
+   // 🚫 Excluir facturas que NO se deben clasificar: pago, transporte, canceladas
+const tipo = (data.tipoFactura || "").toLowerCase();
+const estatus = (data.estatus || "").toLowerCase();
+
+// ❌ Pagos
+if (tipo === "pago") continue;
+
+// ❌ Transporte
+if (tipo === "transporte") continue;
+
+// ❌ Canceladas
+if (estatus === "cancelada") continue;
+
+// (Opcional) Si manejas bandera booleana de cancelación
+if (data.uuid_cancelado === true) continue;
+// ⬇️ AQUÍ
+if (data.distribuido === true) continue;
 
     const card = document.createElement("div");
     card.className = "tarjeta";
@@ -715,6 +741,13 @@ if (data.distribuido) {
 // Ejecutar al inicio y al presionar actualizar
 btnBuscar.addEventListener("click", cargarFacturas);
 cargarProveedores();   // solo llena proveedor al inicio
+cargarFacturas();      // ✅ carga facturas al abrir
+
+  document.getElementById("selectProveedor").addEventListener("change", (e) => {
+  localStorage.setItem("filtroProveedorActivo", e.target.value);
+  cargarFacturas();
+});
+
 </script>
 </body>
 </html>
