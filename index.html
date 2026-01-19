@@ -1,753 +1,197 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Clasificación de Facturas PDD – PROVSOFT</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --azul: #00416A;
-      --resalte: #0c6cbd;
-      --card: #ffffff;
-      --shadow: 0 4px 12px rgba(0,0,0,.15);
-    }
-    body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0; padding: 0;
-      background: linear-gradient(to right, var(--azul), #E4E5E6);
-      color: #111;
-      min-height: 100vh;
-    }
-    header {
-      background: rgba(255,255,255,0.9);
-      box-shadow: var(--shadow);
-      padding: 14px 20px;
-      display: flex; flex-wrap: wrap;
-      justify-content: space-between; align-items: center;
-      position: sticky; top: 0;
-      z-index: 10;
-    }
-    header h1 {
-      margin: 0;
-      color: var(--azul);
-      font-size: 20px;
-      font-weight: 600;
-    }
-    .filtros {
-      display: flex; gap: 10px; align-items: center;
-    }
-    input, select, button {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-family: inherit;
-    }
-    button {
-      background: var(--resalte);
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover { background: #005fa3; }
-
-    main {
-      display: flex;
-      gap: 20px;
-      padding: 20px;
-      flex-wrap: wrap;
-    }
-    .columna {
-      flex: 1 1 45%;
-      background: rgba(255,255,255,0.9);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      padding: 10px;
-      min-height: 80vh;
-      overflow-y: auto;
-    }
-    h2 {
-      text-align: center;
-      color: var(--azul);
-      margin-top: 0;
-    }
-    .tarjeta {
-      background: var(--card);
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1);
-      padding: 12px;
-      margin-bottom: 12px;
-      transition: 0.2s;
-      cursor: pointer;
-    }
-    .tarjeta:hover { transform: scale(1.01); }
-    .tarjeta h3 {
-      margin: 0;
-      color: var(--azul);
-      font-size: 16px;
-    }
-    .detalle {
-      margin-top: 6px;
-      font-size: 13px;
-    }
-    .conceptos {
-      font-size: 12px;
-      margin-top: 8px;
-      background: #f8f8f8;
-      border-radius: 8px;
-      padding: 6px;
-      display: none;
-    }
-    .mostrar { display: block !important; }
-    .selector {
-      margin-top: 8px;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .selector select {
-      flex: 1;
-      margin-right: 8px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Clasificación de Facturas PDD – PROVSOFT</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --azul:#00416A;
+  --resalte:#0c6cbd;
+  --card:#ffffff;
+  --shadow:0 4px 12px rgba(0,0,0,.15);
+}
+body{
+  font-family:'Poppins',sans-serif;
+  margin:0;
+  background:linear-gradient(to right,var(--azul),#E4E5E6);
+}
+header{
+  background:rgba(255,255,255,.9);
+  box-shadow:var(--shadow);
+  padding:14px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.filtros{display:flex;gap:10px}
+input,select,button{
+  padding:6px 10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+button{
+  background:var(--resalte);
+  color:white;
+  border:none;
+}
+main{
+  display:flex;
+  gap:20px;
+  padding:20px;
+}
+.columna{
+  flex:1;
+  background:rgba(255,255,255,.9);
+  border-radius:14px;
+  padding:10px;
+  min-height:80vh;
+  overflow:auto;
+}
+.tarjeta{
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  padding:12px;
+  margin-bottom:12px;
+  cursor:pointer;
+}
+.detalle{font-size:13px}
+.conceptos{display:none}
+.mostrar{display:block}
+.selector{display:none;margin-top:8px}
+</style>
 </head>
+
 <body>
-  <header>
-    <h1>Clasificación de Facturas PDD – PROVSOFT</h1>
+
+<header>
+<h1>Clasificación de Facturas PDD – PROVSOFT</h1>
 <div class="filtros">
-  <select id="selectProveedor">
-    <option value="">Todos los proveedores</option>
-  </select>
-
-  <input type="date" id="filtroFecha">
-
-  <button id="btnBuscar">Buscar</button>
+<select id="selectProveedor">
+<option value="">Todos los proveedores</option>
+</select>
+<input type="date" id="filtroFecha">
+<button id="btnBuscar">Buscar</button>
 </div>
-  </header>
+</header>
 
-  <main>
-    <div class="columna">
-      <h2>Pendientes de distribuir</h2>
-      <div id="pendientes"></div>
-    </div>
-    <div class="columna">
-      <h2>Ya distribuidas</h2>
-      <div id="distribuidas"></div>
-    </div>
-  </main>
+<main>
+<div class="columna">
+<h2>Pendientes de distribuir</h2>
+<div id="pendientes"></div>
+</div>
+<div class="columna">
+<h2>Ya distribuidas</h2>
+<div id="distribuidas"></div>
+</div>
+</main>
 
 <script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-  query, where, getFirestore, collection, getDocs, doc, setDoc, updateDoc, getDoc, deleteDoc
+  getFirestore,collection,getDocs,doc,setDoc,updateDoc,getDoc,deleteDoc,query,where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// === CONFIGURACIÓN FIREBASE ===
-const firebaseConfig = {
-  apiKey: "AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
-  authDomain: "inventariopv-643f1.firebaseapp.com",
-  projectId: "inventariopv-643f1",
-  storageBucket: "inventariopv-643f1.appspot.com",
-  messagingSenderId: "96242533231",
-  appId: "1:96242533231:web:aae75a18fbaf9840529e9a"
+const firebaseConfig={
+  apiKey:"AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
+  authDomain:"inventariopv-643f1.firebaseapp.com",
+  projectId:"inventariopv-643f1",
+};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const pendientesDiv=document.getElementById("pendientes");
+const distribuidasDiv=document.getElementById("distribuidas");
+
+function obtenerProveedor(data){
+  return (
+    data.razon_social_emisor ||
+    data.nombre_proveedor ||
+    data.proveedor ||
+    data.razon_social ||
+    "Sin proveedor"
+  );
+}
+
+async function cargarProveedores(){
+  const snap=await getDocs(collection(db,"almacenes/ALMACENCENTRALPDD/entradas"));
+  const set=new Set();
+  snap.forEach(d=>{
+    const p=obtenerProveedor(d.data());
+    if(p!=="Sin proveedor") set.add(p);
+  });
+  const sel=document.getElementById("selectProveedor");
+  sel.innerHTML='<option value="">Todos los proveedores</option>'+
+    [...set].sort().map(p=>`<option>${p}</option>`).join("");
+}
+
+async function cargarFacturas(){
+  pendientesDiv.innerHTML="";
+  distribuidasDiv.innerHTML="";
+
+  const filtroProv=document.getElementById("selectProveedor").value;
+  const filtroFecha=document.getElementById("filtroFecha").value;
+
+  const snap=await getDocs(collection(db,"almacenes/ALMACENCENTRALPDD/entradas"));
+  const docs=snap.docs.sort((a,b)=>new Date(b.data().fecha||0)-new Date(a.data().fecha||0));
+
+  for(const docSnap of docs){
+    const data=docSnap.data();
+    const proveedor=obtenerProveedor(data);
+
+    if(filtroProv && proveedor!==filtroProv) continue;
+    if(filtroFecha && String(data.fecha||"").includes(filtroFecha)===false) continue;
+
+    const tipo=(data.tipoFactura||"").toLowerCase();
+    const estatus=(data.estatus||"").toLowerCase();
+    if(tipo==="pago"||tipo==="transporte"||estatus==="cancelada"||data.uuid_cancelado===true) continue;
+
+    const card=document.createElement("div");
+    card.className="tarjeta";
+    card.innerHTML=`
+      <h3>${proveedor}</h3>
+      <div class="detalle">
+        <b>Fecha:</b> ${data.fecha||"N/A"}<br>
+        <b>Total:</b> $${(data.total||0).toFixed(2)}<br>
+        <b>UUID:</b> ${data.uuid_cfdi||docSnap.id}
+      </div>
+      <div class="conceptos">Cargando...</div>
+      <div class="selector">
+        <select>
+          <option value="">Seleccionar destino...</option>
+          <option value="Almacen_Matriz">Almacen_Matriz</option>
+          <option value="Gastos">Gastos</option>
+        </select>
+        <button>Enviar</button>
+      </div>
+    `;
+
+    card.onclick=()=>{
+      card.querySelector(".conceptos").classList.toggle("mostrar");
+      card.querySelector(".selector").style.display="flex";
+    };
+
+    if(data.distribuido){
+      distribuidasDiv.appendChild(card);
+    }else{
+      pendientesDiv.appendChild(card);
+    }
+  }
+}
+
+document.getElementById("btnBuscar").onclick=cargarFacturas;
+document.getElementById("selectProveedor").onchange=e=>{
+  localStorage.setItem("filtroProveedorActivo",e.target.value);
+  cargarFacturas();
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const pendientesDiv = document.getElementById("pendientes");
-const distribuidasDiv = document.getElementById("distribuidas");
-
-
-const almacenesDestino = [
-  "Almacen_Dulces",
-  "Almacen_Liquidos",
-  "Almacen_Ruta_1",
-  "Almacen_Ruta_2",
-  "almacen_cigarro",
-  "almacen_zapata",
-  "almacenabarrotepdd",
-  "Almacen_B41",
-  "Almacen_Matriz"
-];
-
-// Limpia la descripción para que pueda usarse como ID válido
-function normalizarId(texto) {
-  return texto
-    .toLowerCase()
-    .replace(/[.#$/[\]\/]/g, "_")
-    .replace(/\s+/g, "_")
-    .substring(0, 180);
-}
-
-// === FUNCIONES PARA VÍNCULOS ===
-async function obtenerVinculo(descripcion) {
-  const idSeguro = normalizarId(descripcion);
-  const ref = doc(db, "vinculos_factura_productos", idSeguro);
-  const snap = await getDoc(ref);
-  return snap.exists() ? snap.data() : null;
-}
-
-async function guardarVinculo(descripcion, productoId, conceptoProd, cantidadOriginal = 1, conversion = 1, cantidadTotal = 1) {
-  const idSeguro = normalizarId(descripcion);
-  const ref = doc(db, "vinculos_factura_productos", idSeguro);
-
-  // Guardar vínculo normal
-  await setDoc(ref, {
-    descripcionFactura: descripcion,
-    productoId,
-    concepto: conceptoProd,
-    cantidadOriginal,
-    conversion,
-    cantidadTotal,
-    fechaVinculo: new Date().toISOString()
-  });
-
-  // 🔹 Actualizar el catálogo de productos con la conversión
-  if (conversion && conversion > 1) {
-    const refProd = doc(db, "productos", productoId);
-    await updateDoc(refProd, {
-      conversion_caja_piezas: conversion
-    });
-  }
-}
-
-// === ELIMINAR VÍNCULO EXISTENTE ===
-async function eliminarVinculo(descripcion) {
-  const idSeguro = normalizarId(descripcion);
-  const ref = doc(db, "vinculos_factura_productos", idSeguro);
-  await deleteDoc(ref);
-  alert("❌ Vínculo eliminado correctamente");
-// === Aplicar filtro automático desde selector externo ===
-const filtroExterno = localStorage.getItem("filtroProveedorActivo");
-if (filtroExterno) {
-  document.getElementById("selectProveedor").value = filtroExterno;
-}
-
-  cargarFacturas(); // refresca automáticamente la vista
-}
-async function cargarProveedores() {
-  const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
-  const snap = await getDocs(ref);
-
-  const proveedores = new Set();
-
-  snap.forEach(docSnap => {
-    const data = docSnap.data();
-    if (data.razon_social_emisor) {
-      proveedores.add(data.razon_social_emisor.trim());
-    }
-  });
-
-  const select = document.getElementById("selectProveedor");
-  select.innerHTML =
-    `<option value="">Todos los proveedores</option>` +
-    [...proveedores]
-      .sort()
-      .map(p => `<option value="${p}">${p}</option>`)
-      .join("");
-}
-
-// === CARGA PRINCIPAL ===
-async function cargarFacturas() {
-  pendientesDiv.innerHTML = "Cargando...";
-  distribuidasDiv.innerHTML = "";
-
-  const filtroProv = document.getElementById("selectProveedor").value;
-  const filtroFecha = document.getElementById("filtroFecha").value;
-
-  const ref = collection(db, "almacenes/ALMACENCENTRALPDD/entradas");
-  const snap = await getDocs(ref);
-  // 🔹 Ordenar los documentos por fecha descendente (más recientes primero)
-const docsOrdenados = snap.docs.sort((a, b) => {
-  const fa = new Date(a.data().fecha || 0);
-  const fb = new Date(b.data().fecha || 0);
-  return fb - fa; // de más nuevo a más viejo
-});
-  pendientesDiv.innerHTML = "";
-  distribuidasDiv.innerHTML = "";
-
-  for (const docSnap of docsOrdenados) {
-    const data = docSnap.data();
-    const coincideProv = !filtroProv || data.razon_social_emisor === filtroProv;
-   let coincideFecha = true;
-if (filtroFecha && data.fecha) {
-  const fechaStr = typeof data.fecha === "string"
-    ? data.fecha
-    : data.fecha.toDate?.().toISOString() || "";
-  coincideFecha = fechaStr.includes(filtroFecha);
-}
-    if (!coincideProv || !coincideFecha) continue;
-   // 🚫 Excluir facturas que NO se deben clasificar: pago, transporte, canceladas
-const tipo = (data.tipoFactura || "").toLowerCase();
-const estatus = (data.estatus || "").toLowerCase();
-
-// ❌ Pagos
-if (tipo === "pago") continue;
-
-// ❌ Transporte
-if (tipo === "transporte") continue;
-
-// ❌ Canceladas
-if (estatus === "cancelada") continue;
-
-// (Opcional) Si manejas bandera booleana de cancelación
-if (data.uuid_cancelado === true) continue;
-// ⬇️ AQUÍ
-if (data.distribuido === true) continue;
-
-    const card = document.createElement("div");
-    card.className = "tarjeta";
-    card.innerHTML = `
-  <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
-  <div class="detalle">
-    <b>Fecha:</b> ${data.fecha || "N/A"}<br>
-    <b>Total:</b> $${(data.total ? data.total.toFixed(2) : "0.00")}<br>
-    <b>UUID:</b> ${data.uuid_cfdi || docSnap.id}
-  </div>
-  <div class="conceptos">Cargando conceptos...</div>
-  <div class="selector" style="display:none;">
-    <select>
-      <option value="">Seleccionar destino...</option>
-      ${almacenesDestino.map(a => `<option value="${a}">${a}</option>`).join("")}
-<option value="Gastos">Gastos</option>
-    </select>
-    <button>Enviar</button>
-  </div>
-`;
-
-    // === ABRIR TARJETA ===
-    card.addEventListener("click", async () => {
-      const conceptosDiv = card.querySelector(".conceptos");
-      const selectorDiv = card.querySelector(".selector");
-      conceptosDiv.classList.toggle("mostrar");
-      selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
-
-      if (conceptosDiv.innerHTML === "Cargando conceptos...") {
-        const conceptos = data.conceptos_detalle || [];
-        let html = "";
-
-        for (const c of conceptos) {
-          const vinculo = await obtenerVinculo(c.descripcion);
-          if (vinculo) {
-            html += `<div>✅ ${c.cantidad} × ${c.descripcion} — vinculado a <b>${vinculo.concepto}</b>
-              <button class="btnReVincular" data-descripcion="${c.descripcion}">🔁 Cambiar</button>
-              <button class="btnEliminarVinculo" data-descripcion="${c.descripcion}">🗑</button>
-            </div>`;
-          } else {
-            html += `<div>${c.cantidad} × ${c.descripcion}
-              <button class="btnVincular" data-descripcion="${c.descripcion}">Vincular producto</button>
-            </div>`;
-          }
-        }
-
-        conceptosDiv.innerHTML = html;
-      }
-
-      // === Vincular producto ===
-      let productosActivosCache = null;
-
-      conceptosDiv.querySelectorAll(".btnVincular").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          const descripcion = e.target.dataset.descripcion;
-
-if (!productosActivosCache) {
-  const refProd = query(collection(db, "productos"), where("activo", "==", true));
-  const snapProd = await getDocs(refProd);
-  productosActivosCache = snapProd.docs.map(d => ({
-    id: d.id,
-    concepto: d.data().concepto || ""
-  }));
-}
-          // === MODAL ===
-          const modal = document.createElement("div");
-          modal.style = `
-            position:fixed;inset:0;background:rgba(0,0,0,0.5);
-            display:flex;align-items:center;justify-content:center;z-index:2000;
-          `;
-          modal.innerHTML = `
-            <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
-              <h3 style="margin-top:0;color:#00416A;">Buscar producto activo</h3>
-              <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
-                     style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
-              <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
-                   border:1px solid #ddd;border-radius:6px;"></div>
-
-              <!-- 🔹 Campo agregado -->
-              <div id="conversionBox" style="display:none;margin-top:10px;">
-                <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
-                <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
-                       style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
-              </div>
-
-              <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
-                      padding:6px 10px;border-radius:6px;">Cerrar</button>
-            </div>
-          `;
-
-          document.body.appendChild(modal);
-          const inputBusqueda = modal.querySelector("#inputBusquedaProd");
-          const listaResultados = modal.querySelector("#resultadosProd");
-          modal.querySelector("#cerrarModal").onclick = () => modal.remove();
-
-          // === Filtrado local ===
-          inputBusqueda.addEventListener("input", () => {
-            const valor = inputBusqueda.value.trim().toLowerCase();
-            listaResultados.innerHTML = "";
-            if (!valor) return;
-
-            const filtrados = productosActivosCache.filter(p =>
-              (p.concepto || "").toLowerCase().includes(valor)
-            );
-
-            if (!filtrados.length) {
-              listaResultados.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
-              return;
-            }
-
-            listaResultados.innerHTML = filtrados
-              .slice(0, 20)
-              .map(p => `
-                <div data-id="${p.id}" data-nombre="${p.concepto}"
-                     style="padding:6px 8px;cursor:pointer;border-bottom:1px solid #eee;">
-                  ${p.concepto}
-                </div>
-              `)
-              .join("");
-
-            listaResultados.querySelectorAll("div[data-id]").forEach(div => {
-              div.addEventListener("click", async () => {
-                const productoId = div.dataset.id;
-                const nombreProd = div.dataset.nombre;
-
-                // 🔹 Mostrar campo de conversión
-                const conversionBox = modal.querySelector("#conversionBox");
-                conversionBox.style.display = "block";
-
-                // 🔹 Verifica si el producto ya tiene conversión registrada
-                const refProd = doc(db, "productos", productoId);
-                const snapProd = await getDoc(refProd);
-                if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
-                  modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
-                }
-
-                // 🔹 Esperar confirmación del usuario
-                const piezasPorCaja = await new Promise(resolve => {
-                  const input = modal.querySelector("#inputConversion");
-                  input.focus();
-
-                  const btnConfirm = document.createElement("button");
-                  btnConfirm.textContent = "Vincular con conversión";
-                  btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
-                  conversionBox.appendChild(btnConfirm);
-
-                  btnConfirm.onclick = () => {
-                    const valor = parseInt(input.value) || 1;
-                    btnConfirm.remove();
-                    resolve(valor);
-                  };
-                });
-
-// Usa la cantidad real del concepto en la factura
-const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
-const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
-const cantidadTotal = cantidadOriginal * piezasPorCaja;
-
-const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
-if (!confirmar) {
-  alert("Operación cancelada");
-  modal.remove();
-  return;
-}
-
-await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
-
-alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
-
-// 🔹 Forzar recarga del listado actualizado
-conceptosDiv.innerHTML = "Actualizando...";
-const conceptosActualizados = data.conceptos_detalle || [];
-let html = "";
-
-for (const c2 of conceptosActualizados) {
-  const vinculoNuevo = await obtenerVinculo(c2.descripcion);
-  if (vinculoNuevo) {
-    html += `<div>✅ ${c2.cantidad} × ${c2.descripcion} — vinculado a <b>${vinculoNuevo.concepto}</b>
-      <button class="btnReVincular" data-descripcion="${c2.descripcion}">🔁 Cambiar</button>
-      <button class="btnEliminarVinculo" data-descripcion="${c2.descripcion}">🗑</button>
-    </div>`;
-  } else {
-    html += `<div>${c2.cantidad} × ${c2.descripcion}
-      <button class="btnVincular" data-descripcion="${c2.descripcion}">Vincular producto</button>
-    </div>`;
-  }
-}
-
-conceptosDiv.innerHTML = html;
-                modal.remove();
-              }); // ← cierra div.addEventListener("click", async ...)
-            }); // ← cierra listaResultados.querySelectorAll
-          }); // ← cierra inputBusqueda.addEventListener
-        }); // ← cierra btn.addEventListener
-      }); // ← cierra conceptosDiv.querySelectorAll(".btnVincular")
-
-      // === Re-vincular ===
-      conceptosDiv.querySelectorAll(".btnReVincular").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          const descripcion = e.target.dataset.descripcion;
-          
-          // Cargar productos activos si no están en cache
-if (!productosActivosCache) {
-  const refProd = query(collection(db, "productos"), where("activo", "==", true));
-  const snapProd = await getDocs(refProd);
-  productosActivosCache = snapProd.docs.map(d => ({
-    id: d.id,
-    concepto: d.data().concepto || ""
-  }));
-}
-
-          // Crear modal para re-vincular
-          const modal = document.createElement("div");
-          modal.style = `
-            position:fixed;inset:0;background:rgba(0,0,0,0.5);
-            display:flex;align-items:center;justify-content:center;z-index:2000;
-          `;
-          modal.innerHTML = `
-            <div style="background:white;padding:20px;border-radius:10px;width:90%;max-width:480px;">
-              <h3 style="margin-top:0;color:#00416A;">Cambiar producto vinculado</h3>
-              <input id="inputBusquedaProd" type="text" placeholder="Escribe parte del nombre..."
-                     style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;">
-              <div id="resultadosProd" style="max-height:300px;overflow:auto;margin-top:10px;
-                   border:1px solid #ddd;border-radius:6px;"></div>
-
-              <div id="conversionBox" style="display:none;margin-top:10px;">
-                <label style="font-size:13px;color:#333;">Conversión (piezas por caja):</label>
-                <input id="inputConversion" type="number" min="1" placeholder="Ejemplo: 12"
-                       style="width:100%;padding:6px;border:1px solid #ccc;border-radius:6px;margin-top:4px;">
-              </div>
-
-              <button id="cerrarModal" style="margin-top:10px;background:#00416A;color:#fff;border:none;
-                      padding:6px 10px;border-radius:6px;">Cerrar</button>
-            </div>
-          `;
-
-          document.body.appendChild(modal);
-          const inputBusqueda = modal.querySelector("#inputBusquedaProd");
-          const listaResultados = modal.querySelector("#resultadosProd");
-          modal.querySelector("#cerrarModal").onclick = () => modal.remove();
-
-          // Filtrado local para re-vincular
-          inputBusqueda.addEventListener("input", () => {
-const valor = inputBusqueda.value.trim().toLowerCase();
-if (!valor) { listaResultados.innerHTML = ""; return; }
-
-const filtrados = productosActivosCache.filter(p =>
-  p.concepto.toLowerCase().includes(valor)
-).slice(0, 50); // limita a 50 resultados para velocidad
-            
-            if (!filtrados.length) {
-              listaResultados.innerHTML = "<p style='padding:8px;'>Sin coincidencias</p>";
-              return;
-            }
-
-            listaResultados.innerHTML = filtrados
-              .slice(0, 20)
-              .map(p => `
-                <div data-id="${p.id}" data-nombre="${p.concepto}"
-                     style="padding:6px 8px;cursor:pointer;border-bottom:1px solid #eee;">
-                  ${p.concepto}
-                </div>
-              `)
-              .join("");
-
-            listaResultados.querySelectorAll("div[data-id]").forEach(div => {
-              div.addEventListener("click", async () => {
-                const productoId = div.dataset.id;
-                const nombreProd = div.dataset.nombre;
-
-                // Mostrar campo de conversión
-                const conversionBox = modal.querySelector("#conversionBox");
-                conversionBox.style.display = "block";
-
-                // Verificar conversión existente
-                const refProd = doc(db, "productos", productoId);
-                const snapProd = await getDoc(refProd);
-                if (snapProd.exists() && snapProd.data().conversion_caja_piezas) {
-                  modal.querySelector("#inputConversion").value = snapProd.data().conversion_caja_piezas;
-                }
-
-                // Esperar confirmación del usuario
-                const piezasPorCaja = await new Promise(resolve => {
-                  const input = modal.querySelector("#inputConversion");
-                  input.focus();
-
-                  const btnConfirm = document.createElement("button");
-                  btnConfirm.textContent = "Vincular con conversión";
-                  btnConfirm.style = "margin-top:10px;background:#0c6cbd;color:white;border:none;padding:6px 10px;border-radius:6px;width:100%;";
-                  conversionBox.appendChild(btnConfirm);
-
-                  btnConfirm.onclick = () => {
-                    const valor = parseInt(input.value) || 1;
-                    btnConfirm.remove();
-                    resolve(valor);
-                  };
-                });
-
-// Usa la cantidad real del concepto (no de la descripción)
-const c = (data.conceptos_detalle || []).find(concepto => concepto.descripcion === descripcion);
-                
-// Usa la cantidad real del concepto en la factura
-const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
-const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
-const cantidadTotal = cantidadOriginal * piezasPorCaja;
-
-
-// 🔹 Confirmar antes de guardar
-const confirmar = confirm(`Confirmar vínculo:\n\n${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas totales`);
-if (!confirmar) {
-  alert("Operación cancelada");
-  modal.remove();
-  return;
-}
-
-// 🔹 Guardar vínculo
-await guardarVinculo(descripcion, productoId, nombreProd, cantidadOriginal, piezasPorCaja, cantidadTotal);
-alert(`✅ Vinculado con ${nombreProd} (${cantidadOriginal} × ${piezasPorCaja} = ${cantidadTotal} piezas)`);
-modal.remove();
-
-                
-                // Actualizar la vista localmente
-                const conceptos = data.conceptos_detalle || [];
-                const item = Array.from(conceptosDiv.children).find(div =>
-                  div.textContent.includes(descripcion)
-                );
-                if (item) {
-                  const c = conceptos.find(concepto => concepto.descripcion === descripcion);
-                  if (c) {
-                    item.innerHTML = `✅ ${c.cantidad} × ${descripcion} — vinculado a <b>${nombreProd}</b>
-                      <button class="btnReVincular" data-descripcion="${descripcion}">🔁 Cambiar</button>
-                      <button class="btnEliminarVinculo" data-descripcion="${descripcion}">🗑</button>`;
-
-                    // Reasignar eventos
-                    item.querySelector(".btnReVincular").addEventListener("click", async (e) => {
-                      e.stopPropagation();
-                      // Aquí se reutiliza toda esta lógica cuando se haga click nuevamente
-                      const fakeButton = document.createElement("button");
-                      fakeButton.dataset.descripcion = descripcion;
-                      fakeButton.classList.add("btnReVincular");
-                      fakeButton.click();
-                    });
-
-                    item.querySelector(".btnEliminarVinculo").addEventListener("click", async (e) => {
-                      e.stopPropagation();
-                      await eliminarVinculo(descripcion);
-                    });
-                  }
-                }
-              });
-            });
-          });
-        });
-      });
-      // === Eliminar vínculo ===
-      conceptosDiv.querySelectorAll(".btnEliminarVinculo").forEach(btn => {
-        btn.addEventListener("click", async (e) => {
-          e.stopPropagation();
-          const descripcion = e.target.dataset.descripcion;
-          await eliminarVinculo(descripcion);
-        });
-      });
-
-    }); // ✅ CIERRA card.addEventListener
-
-// === ENVÍO DE FACTURA ===
-const select = card.querySelector("select");
-select.addEventListener("click", (e) => e.stopPropagation()); // ✅ Evita colapso
-
-const boton = card.querySelector("button");
-boton.addEventListener("click", async (e) => {
-  e.stopPropagation(); // ✅ Evita cerrar tarjeta
-
-  const destino = select.value;
-if (!destino) {
-  alert("Selecciona un destino.");
-  return;
-}
-
-// 🔹 Si se marca como Gasto
-if (destino === "Gastos") {
-  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
-  await updateDoc(refCentral, {
-    tipoFactura: "gasto",
-    fechaClasificacion: new Date().toISOString()
-  });
-
-  alert("🧾 Factura marcada como GASTO y removida de la lista.");
-  cargarProveedores(); // solo carga proveedores
-  return; // no pasa al flujo de distribución
-}
-
-  // 🔹 Enlazar códigos internos a los conceptos antes de enviar
-  const conceptos = data.conceptos_detalle || [];
-  const conceptosEnlazados = [];
-
-  for (const c of conceptos) {
-    const vinculo = await obtenerVinculo(c.descripcion);
-    if (vinculo) {
-      conceptosEnlazados.push({
-        ...c,
-        productoId: vinculo.productoId,
-        productoInterno: vinculo.concepto,
-        conversion: vinculo.conversion,
-        cantidadTotal: vinculo.cantidadTotal
-      });
-    } else {
-      conceptosEnlazados.push(c); // sin vínculo
-    }
-  }
-
-  // 🔹 Guardar en el nuevo almacén con los conceptos ya enlazados
-  const refDestino = doc(db, "almacenes/" + destino + "/entradas/" + docSnap.id);
-  await setDoc(refDestino, {
-    ...data,
-    conceptos_detalle: conceptosEnlazados,
-    origen: "ALMACENCENTRALPDD",
-    fechaDistribucion: new Date().toISOString()
-  });
-
-  // 🔹 Actualizar el documento original en central
-  const refCentral = doc(db, "almacenes/ALMACENCENTRALPDD/entradas/" + docSnap.id);
-  await updateDoc(refCentral, {
-    destino: destino,
-    distribuido: true,
-    fechaDistribucion: new Date().toISOString()
-  });
-
-  alert("✅ Factura enviada correctamente a " + destino);
-  cargarFacturas();
-}); // ← cierra boton.addEventListener
-
-// Clasificación visual: pendiente o distribuida
-if (data.distribuido) {
-  distribuidasDiv.appendChild(card);
-} else {
-  pendientesDiv.appendChild(card);
-}
-
-} // ← cierra el for (const docSnap of snap.docs)
-} // ← cierra la función cargarFacturas()
-
-// Ejecutar al inicio y al presionar actualizar
-btnBuscar.addEventListener("click", cargarFacturas);
-cargarProveedores();   // solo llena proveedor al inicio
-cargarFacturas();      // ✅ carga facturas al abrir
-
-  document.getElementById("selectProveedor").addEventListener("change", (e) => {
-  localStorage.setItem("filtroProveedorActivo", e.target.value);
-  cargarFacturas();
-});
-
+cargarProveedores();
+cargarFacturas();
 </script>
+
 </body>
 </html>
