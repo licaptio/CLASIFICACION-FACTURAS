@@ -91,11 +91,12 @@ main{
 </main>
 
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getFirestore,collection,getDocs,doc,setDoc,updateDoc,getDoc,deleteDoc,query,where
+  getFirestore, collection, getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// 🔹 Firebase
 const firebaseConfig={
   apiKey:"AIzaSyCK5nb6u2CGRJ8AB1aPlRn54b97bdeAFeM",
   authDomain:"inventariopv-643f1.firebaseapp.com",
@@ -107,28 +108,44 @@ const db=getFirestore(app);
 const pendientesDiv=document.getElementById("pendientes");
 const distribuidasDiv=document.getElementById("distribuidas");
 
+/* ======================================================
+   🔑 FUNCIÓN CLAVE — AQUÍ ESTABA EL PROBLEMA REAL
+   Lee proveedor desde TODOS los formatos posibles
+====================================================== */
 function obtenerProveedor(data){
   return (
     data.razon_social_emisor ||
+    data.razon_social ||
     data.nombre_proveedor ||
     data.proveedor ||
-    data.razon_social ||
+    data.emisor?.nombre ||
+    data.Emisor?.Nombre ||
+    data.cfdi?.Emisor?.Nombre ||
     "Sin proveedor"
   );
 }
 
+/* ======================================================
+   Cargar proveedores al select
+====================================================== */
 async function cargarProveedores(){
   const snap=await getDocs(collection(db,"almacenes/ALMACENCENTRALPDD/entradas"));
   const set=new Set();
+
   snap.forEach(d=>{
-    const p=obtenerProveedor(d.data());
-    if(p!=="Sin proveedor") set.add(p);
+    const proveedor=obtenerProveedor(d.data());
+    if(proveedor!=="Sin proveedor") set.add(proveedor);
   });
+
   const sel=document.getElementById("selectProveedor");
-  sel.innerHTML='<option value="">Todos los proveedores</option>'+
-    [...set].sort().map(p=>`<option>${p}</option>`).join("");
+  sel.innerHTML =
+    `<option value="">Todos los proveedores</option>` +
+    [...set].sort().map(p=>`<option value="${p}">${p}</option>`).join("");
 }
 
+/* ======================================================
+   Cargar facturas
+====================================================== */
 async function cargarFacturas(){
   pendientesDiv.innerHTML="";
   distribuidasDiv.innerHTML="";
@@ -143,12 +160,13 @@ async function cargarFacturas(){
     const data=docSnap.data();
     const proveedor=obtenerProveedor(data);
 
+    // Filtros
     if(filtroProv && proveedor!==filtroProv) continue;
-    if(filtroFecha && String(data.fecha||"").includes(filtroFecha)===false) continue;
+    if(filtroFecha && !String(data.fecha||"").includes(filtroFecha)) continue;
 
     const tipo=(data.tipoFactura||"").toLowerCase();
     const estatus=(data.estatus||"").toLowerCase();
-    if(tipo==="pago"||tipo==="transporte"||estatus==="cancelada"||data.uuid_cancelado===true) continue;
+    if(tipo==="pago" || tipo==="transporte" || estatus==="cancelada" || data.uuid_cancelado===true) continue;
 
     const card=document.createElement("div");
     card.className="tarjeta";
@@ -183,12 +201,14 @@ async function cargarFacturas(){
   }
 }
 
+// Eventos
 document.getElementById("btnBuscar").onclick=cargarFacturas;
 document.getElementById("selectProveedor").onchange=e=>{
   localStorage.setItem("filtroProveedorActivo",e.target.value);
   cargarFacturas();
 };
 
+// Init
 cargarProveedores();
 cargarFacturas();
 </script>
