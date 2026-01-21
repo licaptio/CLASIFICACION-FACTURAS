@@ -220,7 +220,7 @@ async function eliminarVinculo(descripcion) {
 // === Aplicar filtro automático desde selector externo ===
 const filtroExterno = localStorage.getItem("filtroProveedorActivo");
 if (filtroExterno) {
-  document.getElementById("filtroProveedor").value = filtroExterno;
+  document.getElementById("selectProveedor").value = filtroExterno;
 }
 
   cargarFacturas(); // refresca automáticamente la vista
@@ -264,7 +264,14 @@ const docsOrdenados = snap.docs.sort((a, b) => {
 
   for (const docSnap of docsOrdenados) {
     const data = docSnap.data();
-    const coincideProv = !filtroProv || data.razon_social_emisor === filtroProv;
+    const proveedor =
+  data.razon_social_emisor ||
+  data.nombre_emisor ||
+  data.emisor ||
+  data.emisor_nombre ||
+  data.razonSocialEmisor ||
+  "Sin proveedor";
+    const coincideProv = !filtroProv || proveedor === filtroProv;
     const coincideFecha = !filtroFecha || (data.fecha || "").startsWith(filtroFecha);
     if (!coincideProv || !coincideFecha) continue;
     if (data.tipoFactura === "gasto") continue;
@@ -272,7 +279,7 @@ const docsOrdenados = snap.docs.sort((a, b) => {
     const card = document.createElement("div");
     card.className = "tarjeta";
     card.innerHTML = `
-  <h3>${data.razon_social_emisor || "Sin proveedor"}</h3>
+  <h3>${proveedor}</h3>
   <div class="detalle">
     <b>Fecha:</b> ${data.fecha || "N/A"}<br>
     <b>Total:</b> $${(data.total ? data.total.toFixed(2) : "0.00")}<br>
@@ -297,7 +304,15 @@ const docsOrdenados = snap.docs.sort((a, b) => {
       selectorDiv.style.display = selectorDiv.style.display === "none" ? "flex" : "none";
 
       if (conceptosDiv.innerHTML === "Cargando conceptos...") {
-        const conceptos = data.conceptos_detalle || [];
+        const conceptos =
+  data.conceptos_detalle ||
+  data.conceptos ||
+  data.items ||
+  [];
+        if (!conceptos.length) {
+  conceptosDiv.innerHTML = "<em>No hay conceptos en esta factura</em>";
+  return;
+}
         let html = "";
 
         for (const c of conceptos) {
@@ -423,7 +438,7 @@ if (!productosActivosCache) {
                 });
 
 // Usa la cantidad real del concepto en la factura
-const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
+const concepto = (conceptosFactura.find|| []).find(x => x.descripcion === descripcion);
 const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
@@ -569,10 +584,10 @@ const filtrados = productosActivosCache.filter(p =>
                 });
 
 // Usa la cantidad real del concepto (no de la descripción)
-const c = (data.conceptos_detalle || []).find(concepto => concepto.descripcion === descripcion);
+const c = (conceptosFactura.find|| []).find(concepto => concepto.descripcion === descripcion);
                 
 // Usa la cantidad real del concepto en la factura
-const concepto = (data.conceptos_detalle || []).find(x => x.descripcion === descripcion);
+const concepto = (conceptosFactura.find || []).find(x => x.descripcion === descripcion);
 const cantidadOriginal = Number(concepto && concepto.cantidad && !isNaN(concepto.cantidad) ? concepto.cantidad : 1);
 const cantidadTotal = cantidadOriginal * piezasPorCaja;
 
@@ -592,7 +607,11 @@ modal.remove();
 
                 
                 // Actualizar la vista localmente
-                const conceptos = data.conceptos_detalle || [];
+                const conceptos =
+  data.conceptos_detalle ||
+  data.conceptos ||
+  data.items ||
+  [];
                 const item = Array.from(conceptosDiv.children).find(div =>
                   div.textContent.includes(descripcion)
                 );
